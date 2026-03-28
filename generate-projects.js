@@ -156,7 +156,7 @@ function scanProjects() {
         icon: getTechIcon(tech),
         color: getTechColor(tech),
         description,
-        path: `/${entry.name}`
+        path: `file://${path.join(DEV_DIR, entry.name)}`
       });
     }
   } catch (e) {
