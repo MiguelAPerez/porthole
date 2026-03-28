@@ -477,13 +477,15 @@ function generateHTML(projects) {
     }
 
     .search {
-      max-width: 400px;
+      max-width: 440px;
       margin: 0 auto 2rem;
-      position: relative;
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
     }
 
     .search input {
-      width: 100%;
+      flex: 1;
       padding: 0.75rem 1rem;
       border-radius: 8px;
       border: 1px solid var(--border);
@@ -491,11 +493,27 @@ function generateHTML(projects) {
       color: var(--text);
       font-size: 1rem;
       outline: none;
-      transition: border-color 0.2s;
     }
 
     .search input:focus {
       border-color: var(--accent);
+    }
+
+    .refresh-btn {
+      padding: 0.75rem 0.875rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      font-size: 1rem;
+      cursor: pointer;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .refresh-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     .projects {
@@ -546,13 +564,10 @@ function generateHTML(projects) {
       text-decoration: none;
       color: inherit;
       display: block;
-      content-visibility: auto;
-      contain-intrinsic-size: 0 130px;
     }
 
-    .project-card:hover {
+    body:not(.scrolling) .project-card:hover {
       border-color: var(--accent);
-      box-shadow: 0 0 0 1px var(--accent);
     }
 
     .project-card .icon {
@@ -610,7 +625,7 @@ function generateHTML(projects) {
 
   <div class="search">
     <input type="search" id="search" placeholder="Search projects...">
-    <button id="refresh" title="Regenerate projects" style="position:absolute;right:0.5rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--muted);padding:0.25rem;">&#x21BB;</button>
+    <button id="refresh" class="refresh-btn" title="Regenerate projects (requires: node server.js)">&#x21BB;</button>
   </div>
 
   <div class="projects" id="projects"></div>
@@ -666,6 +681,13 @@ function generateHTML(projects) {
       clearTimeout(debounce);
       debounce = setTimeout(() => renderProjects(e.target.value), 150);
     });
+
+    let scrollTimer;
+    window.addEventListener('scroll', () => {
+      document.body.classList.add('scrolling');
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => document.body.classList.remove('scrolling'), 150);
+    }, { passive: true });
 
     document.getElementById('refresh').addEventListener('click', async () => {
       const btn = document.getElementById('refresh');
