@@ -4,74 +4,36 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the **Projects View** tool - a simple project browser/dashboard that scans the `~/development` directory and generates an `index.html` file displaying all projects grouped by technology stack.
+A project browser/dashboard that scans `~/development` (`/Users/miguelperez/development`) and generates HTML files displaying all projects grouped by technology stack.
+
+## Commands
+
+```bash
+# Generate/regenerate the dashboard (outputs index.html and summary.html)
+node generate-projects.js
+
+# Run the local server (enables the refresh button in the UI)
+node server.js
+# Server runs at http://localhost:3131
+# GET /refresh → re-runs generate-projects.js and serves updated files
+```
 
 ## Architecture
 
-The project consists of two main files:
+Three files make up the entire project:
 
-1. **`generate-projects.js`** - The main script that:
-   - Scans `~/development` for project directories
-   - Reads `package.json` and `README.md` from each project
-   - Detects technology stack (React, Next.js, TypeScript, Node.js, etc.)
-   - Extracts descriptions from package.json or README.md
-   - Generates an HTML dashboard with search functionality
+**`generate-projects.js`** — Scans `~/development`, detects tech stacks, and writes two output files:
+- `index.html` — main project browser with search and project cards grouped by tech
+- `summary.html` — stats overview with per-tech project counts
 
-2. **`index.html`** - The generated HTML dashboard containing:
-   - Dark theme UI with project cards
-   - Search/filter functionality
-   - Projects grouped by technology category
-   - Icons and colors based on tech stack
+Tech detection priority: `package.json` deps → file-based detection (go.mod, Cargo.toml, etc.) → one-level-deep subdirectory scan. Description comes from `package.json` or `composer.json`.
 
-## How to Use
+**`server.js`** — Minimal HTTP server on port 3131. Serves static files and exposes `GET /refresh` which re-runs the generator synchronously. This enables the refresh button (↻) in the UI to regenerate without opening a terminal.
 
-### Generate the dashboard
-
-```bash
-node generate-projects.js
-```
-
-This will:
-1. Scan `~/development` for all project directories
-2. Skip hidden directories and special folders (node_modules, .git)
-3. Read package.json and README.md from each project
-4. Detect tech stack and generate descriptions
-5. Output a new `index.html` file
-
-### View the dashboard
-
-Open `index.html` in a web browser to browse all projects.
-
-### Search projects
-
-Use the search box in the dashboard to filter projects by:
-- Project name
-- Technology stack
-- Description
-
-## Tech Stack Detection
-
-The script automatically detects these technologies:
-- Frontend: Next.js, React, Vue, Svelte, Astro, SolidJS, SvelteKit, Nuxt
-- Backend: Node.js API, Python, Go, Ruby, PHP, .NET
-- Build tools: TypeScript, Bun, pnpm
-
-## File Structure
-
-```
-projects-view/
-├── generate-projects.js  # Main generation script
-└── index.html            # Generated dashboard
-```
-
-## Common Development Tasks
-
-- **Run the generator**: `node generate-projects.js`
-- **View the dashboard**: Open `index.html` in a browser
-- **Add a new project**: Add a directory to `~/development` with a `package.json` file
+**`index.html` / `summary.html`** — Generated output, not hand-edited. Project data is embedded as JSON inside a `<script>` tag. Search filters client-side. The refresh button calls `http://localhost:3131/refresh` and reloads on success.
 
 ## Notes
 
-- The script runs synchronously and generates the HTML file in-place
-- Projects are automatically discovered from `~/development` directory
-- The generated HTML is self-contained with embedded CSS and JavaScript
+- The hardcoded scan path is `/Users/miguelperez/development` — update `DEV_DIR` in `generate-projects.js` to change it
+- Hover effects on project cards are suppressed during scroll (`.scrolling` class) to eliminate scroll lag
+- `summary.html` is linked from `index.html` as "view summary"

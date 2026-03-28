@@ -6,8 +6,13 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const DEV_DIR = '/Users/miguelperez/development';
+
+const LOCUS_URL = 'https://locus.miguelaperez.dev';
+const LOCUS_SPACE = 'projects';
+const CACHE_PATH = path.join(__dirname, '.locus-cache.json');
 
 function detectTechStack(pkg, composer, dirPath) {
   const has = (file) => fs.existsSync(path.join(dirPath, file));
@@ -168,12 +173,21 @@ function scanProjects() {
       const tech = detectTechStack(pkg, composer, dirPath);
       const description = extractDescription(pkg, composer);
 
+      let readme = '';
+      const readmePath = path.join(dirPath, 'README.md');
+      try {
+        if (fs.existsSync(readmePath)) {
+          readme = fs.readFileSync(readmePath, 'utf8').slice(0, 2000);
+        }
+      } catch { /* ignore */ }
+
       projects.push({
         name: entry.name,
         tech,
         icon: getTechIcon(tech),
         color: getTechColor(tech),
         description,
+        readme,
         path: `file://${path.join(DEV_DIR, entry.name)}`
       });
     }
@@ -499,6 +513,30 @@ function generateHTML(projects) {
       border-color: var(--accent);
     }
 
+    .search-progress {
+      max-width: 440px;
+      margin: -1.5rem auto 1.5rem;
+      height: 2px;
+      background: transparent;
+      overflow: hidden;
+      border-radius: 1px;
+    }
+
+    .search-progress.active::after {
+      content: '';
+      display: block;
+      height: 100%;
+      width: 35%;
+      background: var(--accent);
+      border-radius: 1px;
+      animation: locus-scan 1.2s ease-in-out infinite;
+    }
+
+    @keyframes locus-scan {
+      0%   { transform: translateX(-200%); }
+      100% { transform: translateX(400%); }
+    }
+
     .refresh-btn {
       padding: 0.75rem 0.875rem;
       border-radius: 8px;
@@ -627,6 +665,7 @@ function generateHTML(projects) {
     <input type="search" id="search" placeholder="Search projects...">
     <button id="refresh" class="refresh-btn" title="Regenerate projects (requires: node server.js)">&#x21BB;</button>
   </div>
+  <div class="search-progress" id="search-progress"></div>
 
   <div class="projects" id="projects"></div>
 
@@ -635,6 +674,21 @@ function generateHTML(projects) {
 
     const projectsContainer = document.getElementById('projects');
     const searchInput = document.getElementById('search');
+    const searchProgress = document.getElementById('search-progress');
+
+    const projectMap = {};
+    for (const cat of Object.values(projects)) {
+      for (const p of cat.projects) projectMap[p.name] = p;
+    }
+
+    function cardHTML(p) {
+      return \`<a class="project-card" href="\${p.path}">
+        <div class="icon">\${p.icon}</div>
+        <div class="name">\${p.name}</div>
+        <div class="desc">\${p.description || 'No description'}</div>
+        <div class="tech">\${p.tech}</div>
+      </a>\`;
+    }
 
     function renderProjects(filter = '') {
       const lc = filter.toLowerCase();
@@ -658,28 +712,67 @@ function generateHTML(projects) {
             <span class="count">\${matched.length} projects</span>
           </div>
           <div class="projects-grid">\`;
-
-        for (const p of matched) {
-          html += \`<a class="project-card" href="\${p.path}">
-            <div class="icon">\${p.icon}</div>
-            <div class="name">\${p.name}</div>
-            <div class="desc">\${p.description || 'No description'}</div>
-            <div class="tech">\${p.tech}</div>
-          </a>\`;
-        }
-
+        for (const p of matched) html += cardHTML(p);
         html += '</div></div>';
       }
 
       projectsContainer.innerHTML = html || '<div class="no-results">No projects found</div>';
     }
 
+    function renderLocusResults(results) {
+      const seen = new Map();
+      for (const r of results) {
+        const name = r.metadata && r.metadata.source;
+        const p = name && projectMap[name];
+        if (!p) continue;
+        if (!seen.has(name) || r.score > seen.get(name).score) seen.set(name, { p, score: r.score });
+      }
+
+      if (seen.size === 0) {
+        projectsContainer.innerHTML = '<div class="no-results">No projects found</div>';
+        return;
+      }
+
+      let html = \`<div class="category"><div class="category-header"><span class="icon">🔍</span><h2>Semantic results</h2><span class="count">\${seen.size} projects</span></div><div class="projects-grid">\`;
+      for (const { p } of seen.values()) html += cardHTML(p);
+      html += '</div></div>';
+      projectsContainer.innerHTML = html;
+    }
+
     renderProjects();
 
     let debounce;
+    let currentQuery = '';
+
     searchInput.addEventListener('input', (e) => {
       clearTimeout(debounce);
-      debounce = setTimeout(() => renderProjects(e.target.value), 150);
+      const query = e.target.value.trim();
+      currentQuery = query;
+
+      if (!query) {
+        searchProgress.classList.remove('active');
+        renderProjects();
+        return;
+      }
+
+      debounce = setTimeout(async () => {
+        searchProgress.classList.add('active');
+        try {
+          const res = await fetch(
+            \`https://locus.miguelaperez.dev/spaces/projects/search?q=\${encodeURIComponent(query)}&k=10\`,
+            { signal: AbortSignal.timeout(3000) }
+          );
+          if (!res.ok) throw new Error('non-ok');
+          const data = await res.json();
+          if (currentQuery !== query) return;
+          searchProgress.classList.remove('active');
+          renderLocusResults(data.results || []);
+        } catch {
+          if (currentQuery !== query) return;
+          searchProgress.classList.remove('active');
+          renderProjects(query);
+        }
+      }, 300);
     });
 
     let scrollTimer;
@@ -708,21 +801,131 @@ function generateHTML(projects) {
   return html;
 }
 
-// Main execution
-const projects = scanProjects();
-console.log(`Found ${projects.length} projects:`);
-for (const p of projects) {
-  console.log(`  - ${p.name} (${p.tech})`);
+// ── Locus sync ────────────────────────────────────────────────────────────────
+
+function computeHash(p) {
+  return crypto.createHash('md5')
+    .update([p.name, p.tech, p.description, p.readme].join('|'))
+    .digest('hex');
 }
 
-const html = generateHTML(projects);
-const outputPath = path.join(__dirname, 'index.html');
-fs.writeFileSync(outputPath, html, 'utf8');
+function loadCache() {
+  try { return JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8')); }
+  catch { return {}; }
+}
 
-const summaryHTML = generateSummaryHTML(projects);
-const summaryOutputPath = path.join(__dirname, 'summary.html');
-fs.writeFileSync(summaryOutputPath, summaryHTML, 'utf8');
+function saveCache(cache) {
+  fs.writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 2), 'utf8');
+}
 
-console.log(`\nGenerated ${outputPath}`);
-console.log(`Generated ${summaryOutputPath}`);
-console.log(`Open index.html in your browser to browse your projects!`);
+function printProgress(done, total, label) {
+  const W = 30;
+  const filled = total === 0 ? W : Math.round((done / total) * W);
+  const bar = '='.repeat(Math.max(0, filled - 1)) + (filled > 0 ? '>' : '') + ' '.repeat(W - filled);
+  process.stdout.write(`\rLocus [${bar}] ${done}/${total} ${label.slice(0, 24).padEnd(24)}`);
+}
+
+async function ensureSpace() {
+  await fetch(`${LOCUS_URL}/spaces`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: LOCUS_SPACE })
+  });
+}
+
+async function ingestProject(p) {
+  const text = `Project: ${p.name}\nTech: ${p.tech}\nDescription: ${p.description}\n\n${p.readme}`.trim();
+  const form = new FormData();
+  form.append('text', text);
+  form.append('source', p.name);
+  const res = await fetch(`${LOCUS_URL}/spaces/${LOCUS_SPACE}/documents`, {
+    method: 'POST',
+    body: form
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return data.doc_id;
+}
+
+async function deleteDoc(docId) {
+  await fetch(`${LOCUS_URL}/spaces/${LOCUS_SPACE}/documents/${docId}`, { method: 'DELETE' });
+}
+
+async function syncToLocus(projects) {
+  const cache = loadCache();
+
+  const current = {};
+  for (const p of projects) current[p.name] = { project: p, hash: computeHash(p) };
+
+  const toUpsert = projects.filter(p => !cache[p.name] || cache[p.name].hash !== current[p.name].hash);
+  const toRemove = Object.keys(cache).filter(name => !current[name]);
+  const total = toUpsert.length + toRemove.length;
+
+  if (total === 0) {
+    console.log('\nLocus: 0 changes, skipping sync.');
+    return;
+  }
+
+  console.log(`\nSyncing ${total} change(s) to Locus...`);
+
+  try {
+    await ensureSpace();
+  } catch (e) {
+    console.warn(`\nLocus unreachable, skipping sync: ${e.message}`);
+    return;
+  }
+
+  let done = 0;
+
+  for (const name of toRemove) {
+    printProgress(done, total, `remove ${name}`);
+    try {
+      await deleteDoc(cache[name].docId);
+      delete cache[name];
+    } catch (e) {
+      process.stdout.write(`\nWarning: could not delete ${name}: ${e.message}\n`);
+    }
+    done++;
+  }
+
+  for (const p of toUpsert) {
+    printProgress(done, total, p.name);
+    try {
+      if (cache[p.name]?.docId) await deleteDoc(cache[p.name].docId);
+      const docId = await ingestProject(p);
+      cache[p.name] = { docId, hash: current[p.name].hash };
+    } catch (e) {
+      process.stdout.write(`\nWarning: could not index ${p.name}: ${e.message}\n`);
+    }
+    done++;
+  }
+
+  printProgress(total, total, 'done');
+  process.stdout.write('\n');
+  saveCache(cache);
+}
+
+// Main execution
+async function main() {
+  const projects = scanProjects();
+  console.log(`Found ${projects.length} projects:`);
+  for (const p of projects) {
+    console.log(`  - ${p.name} (${p.tech})`);
+  }
+
+  const html = generateHTML(projects);
+  const outputPath = path.join(__dirname, 'index.html');
+  fs.writeFileSync(outputPath, html, 'utf8');
+
+  const summaryHTML = generateSummaryHTML(projects);
+  const summaryOutputPath = path.join(__dirname, 'summary.html');
+  fs.writeFileSync(summaryOutputPath, summaryHTML, 'utf8');
+
+  console.log(`\nGenerated ${outputPath}`);
+  console.log(`Generated ${summaryOutputPath}`);
+  console.log(`Open index.html in your browser to browse your projects!`);
+
+  await syncToLocus(projects);
+}
+
+main().catch(console.error);
