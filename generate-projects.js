@@ -10,7 +10,7 @@ const crypto = require('crypto');
 
 const DEV_DIR = '/Users/miguelperez/development';
 
-const LOCUS_URL = 'http://localhost:8000';
+const LOCUS_URL = 'https://locus.miguelaperez.dev';
 const LOCUS_SPACE = 'projects';
 const CACHE_PATH = path.join(__dirname, '.locus-cache.json');
 
