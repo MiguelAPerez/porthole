@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects Summary</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --hover: #1f242c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+      line-height: 1.5;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--muted);
+    }
+
+    .stats {
+      max-width: 800px;
+      margin: 0 auto 2rem;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .stat-card .number {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-card .label {
+      color: var(--muted);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tech-breakdown {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .tech-section {
+      margin-bottom: 2rem;
+    }
+
+    .tech-section .header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tech-section h2 {
+      font-size: 1.25rem;
+      color: var(--text);
+    }
+
+    .tech-section .count {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .tech-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .tech-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .tech-item:hover {
+      background: var(--hover);
+    }
+
+    .tech-item .icon {
+      font-size: 1.5rem;
+    }
+
+    .tech-item .name {
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .tech-item .count {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .nav-links {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .nav-links a {
+      display: inline-block;
+      margin: 0 1rem;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .nav-links a:hover {
+      background: var(--hover);
+    }
+
+    #loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 Projects Summary</h1>
+    <p>Overview of your development projects</p>
+  </div>
+
+  <div id="loading">Loading summary...</div>
+
+  <div class="stats" id="statsContainer" style="display: none;">
+    <div class="stat-card">
+      <div class="number" id="totalCount">0</div>
+      <div class="label">Total Projects</div>
+    </div>
+  </div>
+
+  <div class="tech-breakdown" id="breakdownContainer" style="display: none;">
+    <!-- Populated by JS -->
+  </div>
+
+  <div class="nav-links">
+    <a href="index.html">📁 Browse All Projects</a>
+  </div>
+
+  <script src="summary.js"></script>
+</body>
+</html>

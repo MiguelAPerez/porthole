@@ -1,0 +1,13 @@
+{
+  "name": "projects-view",
+  "version": "1.0.0",
+  "description": "A viewer for local development projects",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "gen": "node generate-projects.js",
+    "view": "open http://localhost:3131"
+  },
+  "author": "Miguel Perez",
+  "license": "MIT"
+}
