@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects Summary</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --hover: #1f242c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+      line-height: 1.5;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--muted);
+    }
+
+    .stats {
+      max-width: 800px;
+      margin: 0 auto 2rem;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .stat-card .number {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-card .label {
+      color: var(--muted);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tech-breakdown {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .tech-section {
+      margin-bottom: 2rem;
+    }
+
+    .tech-section .header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tech-section h2 {
+      font-size: 1.25rem;
+      color: var(--text);
+    }
+
+    .tech-section .count {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .tech-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .tech-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .tech-item .icon {
+      font-size: 1.5rem;
+    }
+
+    .tech-item .name {
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .tech-item .count {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .nav-links {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .nav-links a {
+      display: inline-block;
+      margin: 0 1rem;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .nav-links a:hover {
+      background: var(--hover);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 Projects Summary</h1>
+    <p>Overview of your development projects</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="number">50</div>
+      <div class="label">Total Projects</div>
+    </div>
+  </div>
+
+  <div class="tech-breakdown">
+
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #00599c">⚙️</span>
+        <h2>C++</h2>
+        <span class="count">1 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/BeamMP-Server" class="tech-item" style="border-left: 3px solid #00599c">
+          <span class="icon">⚙️</span>
+          <span class="name">BeamMP-Server</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #61dafb">⚛️</span>
+        <h2>React</h2>
+        <span class="count">5 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/Documentation" class="tech-item" style="border-left: 3px solid #61dafb">
+          <span class="icon">⚛️</span>
+          <span class="name">Documentation</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/activepieces" class="tech-item" style="border-left: 3px solid #61dafb">
+          <span class="icon">⚛️</span>
+          <span class="name">activepieces</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/portfolio-docusaurus" class="tech-item" style="border-left: 3px solid #61dafb">
+          <span class="icon">⚛️</span>
+          <span class="name">portfolio-docusaurus</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/rent-tracker" class="tech-item" style="border-left: 3px solid #61dafb">
+          <span class="icon">⚛️</span>
+          <span class="name">rent-tracker</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/trading-bot" class="tech-item" style="border-left: 3px solid #61dafb">
+          <span class="icon">⚛️</span>
+          <span class="name">trading-bot</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #888888">📁</span>
+        <h2>JavaScript/Node.js</h2>
+        <span class="count">7 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/Ledger" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">Ledger</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/activebiz" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">activebiz</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/ezfolio" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">ezfolio</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/portfolio" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">portfolio</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/portfolio-8.1" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">portfolio-8.1</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/tabby" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">tabby</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/vscode-extensions" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">vscode-extensions</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #888888">📁</span>
+        <h2>Unknown</h2>
+        <span class="count">9 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/Skills" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">Skills</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/coder-templates" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">coder-templates</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/coding-agent-configs" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">coding-agent-configs</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/dev_env" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">dev_env</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/env" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">env</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/iot" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">iot</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/miguelaperez" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">miguelaperez</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/projects-view" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">projects-view</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/request-review-bot" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">request-review-bot</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #3776ab">🐍</span>
+        <h2>Python</h2>
+        <span class="count">10 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/act_runner_manager" class="tech-item" style="border-left: 3px solid #3776ab">
+          <span class="icon">🐍</span>
+          <span class="name">act_runner_manager</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/agent-tools" class="tech-item" style="border-left: 3px solid #3776ab">
+          <span class="icon">🐍</span>
+          <span class="name">agent-tools</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/automate" class="tech-item" style="border-left: 3px solid #3776ab">
+          <span class="icon">🐍</span>
+          <span class="name">automate</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/automate-hosting" class="tech-item" style="border-left: 3px solid #3776ab">
+          <span class="icon">🐍</span>
+          <span class="name">automate-hosting</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/automation-services" class="tech-item" style="border-left: 3px solid #3776ab">
+          <span class="icon">🐍</span>
+          <span class="name">automation-services</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/datasources-manager" class="tech-item" style="border-left: 3px solid #3776ab">
+          <span class="icon">🐍</span>
+          <span class="name">datasources-manager</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/homelab" class="tech-item" style="border-left: 3px solid #3776ab">
+          <span class="icon">🐍</span>
+          <span class="name">homelab</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/infrastructure" class="tech-item" style="border-left: 3px solid #3776ab">
+          <span class="icon">🐍</span>
+          <span class="name">infrastructure</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/mazda" class="tech-item" style="border-left: 3px solid #3776ab">
+          <span class="icon">🐍</span>
+          <span class="name">mazda</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/mcp" class="tech-item" style="border-left: 3px solid #3776ab">
+          <span class="icon">🐍</span>
+          <span class="name">mcp</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #888888">📁</span>
+        <h2>Ansible</h2>
+        <span class="count">1 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/ansible" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">📁</span>
+          <span class="name">ansible</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #777bb4">🐘</span>
+        <h2>PHP</h2>
+        <span class="count">8 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/apartment-rent-tracker" class="tech-item" style="border-left: 3px solid #777bb4">
+          <span class="icon">🐘</span>
+          <span class="name">apartment-rent-tracker</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/creality-k2-metrics-exporter" class="tech-item" style="border-left: 3px solid #777bb4">
+          <span class="icon">🐘</span>
+          <span class="name">creality-k2-metrics-exporter</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/github-readme-updater" class="tech-item" style="border-left: 3px solid #777bb4">
+          <span class="icon">🐘</span>
+          <span class="name">github-readme-updater</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/le-cleaning-service" class="tech-item" style="border-left: 3px solid #777bb4">
+          <span class="icon">🐘</span>
+          <span class="name">le-cleaning-service</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/ledger-web" class="tech-item" style="border-left: 3px solid #777bb4">
+          <span class="icon">🐘</span>
+          <span class="name">ledger-web</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/playground" class="tech-item" style="border-left: 3px solid #777bb4">
+          <span class="icon">🐘</span>
+          <span class="name">playground</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/redirect-server" class="tech-item" style="border-left: 3px solid #777bb4">
+          <span class="icon">🐘</span>
+          <span class="name">redirect-server</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/repo-templates" class="tech-item" style="border-left: 3px solid #777bb4">
+          <span class="icon">🐘</span>
+          <span class="name">repo-templates</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #888888">⚡</span>
+        <h2>Next.js</h2>
+        <span class="count">3 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/blog" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">⚡</span>
+          <span class="name">blog</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/coding-agent" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">⚡</span>
+          <span class="name">coding-agent</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/iot-agent" class="tech-item" style="border-left: 3px solid #888888">
+          <span class="icon">⚡</span>
+          <span class="name">iot-agent</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #2496ed">🐳</span>
+        <h2>Docker</h2>
+        <span class="count">1 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/claude-code" class="tech-item" style="border-left: 3px solid #2496ed">
+          <span class="icon">🐳</span>
+          <span class="name">claude-code</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #3178c6">🔷</span>
+        <h2>TypeScript</h2>
+        <span class="count">2 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/locus-mcp" class="tech-item" style="border-left: 3px solid #3178c6">
+          <span class="icon">🔷</span>
+          <span class="name">locus-mcp</span>
+          <span class="count">View</span>
+        </a>
+      
+        <a href="file:///Users/miguelperez/development/obsidian-context-sync" class="tech-item" style="border-left: 3px solid #3178c6">
+          <span class="icon">🔷</span>
+          <span class="name">obsidian-context-sync</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #68a063">🟢</span>
+        <h2>Node.js API</h2>
+        <span class="count">1 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/openTelementry-nodejs-example" class="tech-item" style="border-left: 3px solid #68a063">
+          <span class="icon">🟢</span>
+          <span class="name">openTelementry-nodejs-example</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #a78bfa">🌟</span>
+        <h2>Astro</h2>
+        <span class="count">1 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/personal-portfolio" class="tech-item" style="border-left: 3px solid #a78bfa">
+          <span class="icon">🌟</span>
+          <span class="name">personal-portfolio</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: #7b42bc">🏗️</span>
+        <h2>Terraform</h2>
+        <span class="count">1 projects</span>
+      </div>
+      <div class="tech-list">
+
+        <a href="file:///Users/miguelperez/development/terraform" class="tech-item" style="border-left: 3px solid #7b42bc">
+          <span class="icon">🏗️</span>
+          <span class="name">terraform</span>
+          <span class="count">View</span>
+        </a>
+      
+      </div>
+    </div>
+  
+  </div>
+
+  <div class="nav-links">
+    <a href="index.html">📁 Browse All Projects</a>
+  </div>
+</body>
+</html>

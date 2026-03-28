@@ -9,37 +9,65 @@ const path = require('path');
 
 const DEV_DIR = '/Users/miguelperez/development';
 
-function detectTechStack(pkg) {
-  if (!pkg) return 'Unknown';
+function detectTechStack(pkg, composer, dirPath) {
+  const has = (file) => fs.existsSync(path.join(dirPath, file));
+  const hasExt = (ext) => {
+    try {
+      return fs.readdirSync(dirPath).some(f => f.endsWith(ext));
+    } catch { return false; }
+  };
 
-  const deps = pkg.dependencies || {};
-  const devDeps = pkg.devDependencies || {};
+  // package.json deps take priority
+  if (pkg) {
+    const deps = pkg.dependencies || {};
+    const devDeps = pkg.devDependencies || {};
 
-  // Check for frontend frameworks
-  if (deps.next || devDeps['@next/swc']) return 'Next.js';
-  if (deps.react || devDeps['@types/react']) return 'React';
-  if (deps.vue || devDeps['@types/vue']) return 'Vue';
-  if (deps.svelte || devDeps['@types/svelte']) return 'Svelte';
-  if (deps.astro || devDeps['@types/astro']) return 'Astro';
-  if (deps.solid || devDeps['@types/solid-js']) return 'SolidJS';
-  if (deps.sveltekit) return 'SvelteKit';
-  if (deps.nuxt || devDeps['@types/nuxt']) return 'Nuxt';
-  if (deps.vue || devDeps['@types/vue']) return 'Vue';
+    if (deps.next || devDeps['@next/swc']) return 'Next.js';
+    if (deps.react || devDeps['@types/react']) return 'React';
+    if (deps.vue || devDeps['@types/vue']) return 'Vue';
+    if (deps.svelte || devDeps['@types/svelte']) return 'Svelte';
+    if (deps.astro || devDeps['@types/astro']) return 'Astro';
+    if (deps.solid || devDeps['@types/solid-js']) return 'SolidJS';
+    if (deps.sveltekit) return 'SvelteKit';
+    if (deps.nuxt || devDeps['@types/nuxt']) return 'Nuxt';
+    if (deps.express || deps.fastify || deps.koa) return 'Node.js API';
+    if (deps.typescript || devDeps.typescript) return 'TypeScript';
+    if (deps.bun) return 'Bun';
+    return 'JavaScript/Node.js';
+  }
 
-  // Check for backend
-  if (deps.express || deps.fastify || deps.koa) return 'Node.js API';
-  if (deps.django || deps.flask) return 'Python';
-  if (deps.go) return 'Go';
-  if (deps.ruby) return 'Ruby';
-  if (deps.php) return 'PHP';
-  if (deps.dotnet) return '.NET';
+  // File-based detection for non-JS projects
+  if (composer) return 'PHP';
+  if (has('go.mod')) return 'Go';
+  if (has('Cargo.toml')) return 'Rust';
+  if (has('Gemfile')) return 'Ruby';
+  if (has('requirements.txt') || has('pyproject.toml') || has('setup.py') || hasExt('.py')) return 'Python';
+  if (hasExt('.tf') || has('terraform.tfstate')) return 'Terraform';
+  if (has('CMakeLists.txt')) return 'C++';
+  if (has('playbook.yml') || has('ansible.cfg') || has('site.yml')) return 'Ansible';
+  if (has('docker-compose.yml') || has('Dockerfile')) return 'Docker';
 
-  // Check for build tools
-  if (deps.typescript || devDeps.typescript) return 'TypeScript';
-  if (deps.bun) return 'Bun';
-  if (deps.pnpm) return 'pnpm';
+  // Check one level deep — collect all found techs, pick highest priority
+  const priority = ['PHP', 'Go', 'Rust', 'TypeScript', 'JavaScript/Node.js', 'Python', 'Ansible', 'Docker'];
+  const found = new Set();
+  try {
+    for (const sub of fs.readdirSync(dirPath)) {
+      const subPath = path.join(dirPath, sub);
+      if (!fs.statSync(subPath).isDirectory()) continue;
+      if (fs.existsSync(path.join(subPath, 'composer.json'))) found.add('PHP');
+      if (fs.existsSync(path.join(subPath, 'package.json'))) found.add('JavaScript/Node.js');
+      if (fs.existsSync(path.join(subPath, 'go.mod'))) found.add('Go');
+      if (fs.existsSync(path.join(subPath, 'Cargo.toml'))) found.add('Rust');
+      if (fs.existsSync(path.join(subPath, 'requirements.txt')) || fs.existsSync(path.join(subPath, 'pyproject.toml'))) found.add('Python');
+      if (fs.existsSync(path.join(subPath, 'playbook.yml')) || fs.existsSync(path.join(subPath, 'ansible.cfg'))) found.add('Ansible');
+      if (fs.existsSync(path.join(subPath, 'docker-compose.yml')) || fs.existsSync(path.join(subPath, 'Dockerfile'))) found.add('Docker');
+    }
+  } catch { /* ignore */ }
+  for (const p of priority) {
+    if (found.has(p)) return p;
+  }
 
-  return 'JavaScript/Node.js';
+  return 'Unknown';
 }
 
 function getTechIcon(tech) {
@@ -55,12 +83,15 @@ function getTechIcon(tech) {
     'Node.js API': '🟢',
     'Python': '🐍',
     'Go': '🐹',
-    'Ruby': '🔷',
+    'Ruby': '💎',
     'PHP': '🐘',
     '.NET': '🟦',
     'TypeScript': '🔷',
     'Bun': '🔵',
-    'pnpm': '📦',
+    'Rust': '🦀',
+    'Terraform': '🏗️',
+    'C++': '⚙️',
+    'Docker': '🐳',
     'Unknown': '📁'
   };
   return icons[tech] || '📁';
@@ -68,11 +99,11 @@ function getTechIcon(tech) {
 
 function getTechColor(tech) {
   const colors = {
-    'Next.js': '#000000',
+    'Next.js': '#888888',
     'React': '#61dafb',
     'Vue': '#41b883',
     'Svelte': '#ff3e00',
-    'Astro': '#222222',
+    'Astro': '#a78bfa',
     'SolidJS': '#2e45f0',
     'SvelteKit': '#ff3e00',
     'Nuxt': '#41b883',
@@ -83,28 +114,19 @@ function getTechColor(tech) {
     'PHP': '#777bb4',
     '.NET': '#512bd4',
     'TypeScript': '#3178c6',
-    'Bun': '#000000',
-    'pnpm': '#f7e015',
+    'Bun': '#fbf0df',
+    'Rust': '#ce4a00',
+    'Terraform': '#7b42bc',
+    'C++': '#00599c',
+    'Docker': '#2496ed',
     'Unknown': '#888888'
   };
   return colors[tech] || '#888888';
 }
 
-function extractDescription(pkg, readme) {
-  if (pkg && pkg.description) {
-    return pkg.description;
-  }
-
-  if (readme) {
-    const lines = readme.split('\n');
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('-')) {
-        return trimmed.substring(0, 100);
-      }
-    }
-  }
-
+function extractDescription(pkg, composer) {
+  if (pkg && pkg.description) return pkg.description;
+  if (composer && composer.description) return composer.description;
   return '';
 }
 
@@ -126,29 +148,25 @@ function scanProjects() {
           entry.name === '.git') continue;
 
       const pkgPath = path.join(dirPath, 'package.json');
-      const readmePath = path.join(dirPath, 'README.md');
+      const composerPath = path.join(dirPath, 'composer.json');
 
       let pkg = null;
-      let readme = null;
+      let composer = null;
 
       try {
         if (fs.existsSync(pkgPath)) {
           pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
         }
-      } catch (e) {
-        // Ignore JSON parse errors
-      }
+      } catch (e) { /* ignore */ }
 
       try {
-        if (fs.existsSync(readmePath)) {
-          readme = fs.readFileSync(readmePath, 'utf8');
+        if (fs.existsSync(composerPath)) {
+          composer = JSON.parse(fs.readFileSync(composerPath, 'utf8'));
         }
-      } catch (e) {
-        // Ignore read errors
-      }
+      } catch (e) { /* ignore */ }
 
-      const tech = detectTechStack(pkg);
-      const description = extractDescription(pkg, readme);
+      const tech = detectTechStack(pkg, composer, dirPath);
+      const description = extractDescription(pkg, composer);
 
       projects.push({
         name: entry.name,
@@ -164,6 +182,235 @@ function scanProjects() {
   }
 
   return projects;
+}
+
+function generateSummaryHTML(projects) {
+  const totalProjects = projects.length;
+  const techCounts = {};
+  const techList = [];
+
+  // Count projects by tech
+  for (const project of projects) {
+    const tech = project.tech;
+    if (!techCounts[tech]) {
+      techCounts[tech] = 0;
+      techList.push(tech);
+    }
+    techCounts[tech]++;
+  }
+
+  let html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects Summary</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --hover: #1f242c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+      line-height: 1.5;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--muted);
+    }
+
+    .stats {
+      max-width: 800px;
+      margin: 0 auto 2rem;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .stat-card .number {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-card .label {
+      color: var(--muted);
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tech-breakdown {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .tech-section {
+      margin-bottom: 2rem;
+    }
+
+    .tech-section .header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tech-section h2 {
+      font-size: 1.25rem;
+      color: var(--text);
+    }
+
+    .tech-section .count {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .tech-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .tech-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .tech-item .icon {
+      font-size: 1.5rem;
+    }
+
+    .tech-item .name {
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .tech-item .count {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .nav-links {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .nav-links a {
+      display: inline-block;
+      margin: 0 1rem;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+
+    .nav-links a:hover {
+      background: var(--hover);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📊 Projects Summary</h1>
+    <p>Overview of your development projects</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="number">${totalProjects}</div>
+      <div class="label">Total Projects</div>
+    </div>
+  </div>
+
+  <div class="tech-breakdown">
+`;
+
+  for (const tech of techList) {
+    const count = techCounts[tech];
+    const icon = getTechIcon(tech);
+    const color = getTechColor(tech);
+
+    html += `
+    <div class="tech-section">
+      <div class="header">
+        <span style="color: ${color}">${icon}</span>
+        <h2>${tech}</h2>
+        <span class="count">${count} projects</span>
+      </div>
+      <div class="tech-list">
+`;
+
+    // Get projects for this tech
+    const techProjects = projects.filter(p => p.tech === tech);
+
+    for (const project of techProjects) {
+      html += `
+        <a href="${project.path}" class="tech-item" style="border-left: 3px solid ${color}">
+          <span class="icon">${icon}</span>
+          <span class="name">${project.name}</span>
+          <span class="count">View</span>
+        </a>
+      `;
+    }
+
+    html += `
+      </div>
+    </div>
+  `;
+  }
+
+  html += `
+  </div>
+
+  <div class="nav-links">
+    <a href="index.html">📁 Browse All Projects</a>
+  </div>
+</body>
+</html>`;
+
+  return html;
 }
 
 function generateHTML(projects) {
@@ -296,16 +543,16 @@ function generateHTML(projects) {
       border-radius: 12px;
       padding: 1rem;
       cursor: pointer;
-      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
       text-decoration: none;
       color: inherit;
       display: block;
+      content-visibility: auto;
+      contain-intrinsic-size: 0 130px;
     }
 
     .project-card:hover {
-      transform: translateY(-2px);
       border-color: var(--accent);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      box-shadow: 0 0 0 1px var(--accent);
     }
 
     .project-card .icon {
@@ -358,11 +605,12 @@ function generateHTML(projects) {
 <body>
   <div class="header">
     <h1>📁 Projects</h1>
-    <p>Browse through all your development projects</p>
+    <p>Browse through all your development projects &mdash; <a href="summary.html" style="color: var(--accent); text-decoration: none;">view summary</a></p>
   </div>
 
   <div class="search">
     <input type="search" id="search" placeholder="Search projects...">
+    <button id="refresh" title="Regenerate projects" style="position:absolute;right:0.5rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--muted);padding:0.25rem;">&#x21BB;</button>
   </div>
 
   <div class="projects" id="projects"></div>
@@ -374,69 +622,62 @@ function generateHTML(projects) {
     const searchInput = document.getElementById('search');
 
     function renderProjects(filter = '') {
-      projectsContainer.innerHTML = '';
-
-      const filteredProjects = [];
+      const lc = filter.toLowerCase();
+      let html = '';
 
       for (const category of Object.values(projects)) {
-        const filteredCategoryProjects = category.projects.filter(p =>
-          p.name.toLowerCase().includes(filter.toLowerCase()) ||
-          p.tech.toLowerCase().includes(filter.toLowerCase()) ||
-          (p.description && p.description.toLowerCase().includes(filter.toLowerCase()))
-        );
+        const matched = filter
+          ? category.projects.filter(p =>
+              p.name.toLowerCase().includes(lc) ||
+              p.tech.toLowerCase().includes(lc) ||
+              (p.description && p.description.toLowerCase().includes(lc))
+            )
+          : category.projects;
 
-        if (filteredCategoryProjects.length > 0) {
-          filteredProjects.push({
-            ...category,
-            projects: filteredCategoryProjects
-          });
-        }
-      }
+        if (matched.length === 0) continue;
 
-      if (filteredProjects.length === 0) {
-        projectsContainer.innerHTML = '<div class="no-results">No projects found</div>';
-        return;
-      }
+        html += \`<div class="category">
+          <div class="category-header">
+            <span class="icon">\${category.icon}</span>
+            <h2>\${category.tech}</h2>
+            <span class="count">\${matched.length} projects</span>
+          </div>
+          <div class="projects-grid">\`;
 
-      for (const category of filteredProjects) {
-        const categoryDiv = document.createElement('div');
-        categoryDiv.className = 'category';
-
-        const header = document.createElement('div');
-        header.className = 'category-header';
-        header.innerHTML = \`
-          <span class="icon">\${category.icon}</span>
-          <h2>\${category.tech}</h2>
-          <span class="count">\${category.projects.length} projects</span>
-        \`;
-
-        const grid = document.createElement('div');
-        grid.className = 'projects-grid';
-
-        for (const project of category.projects) {
-          const card = document.createElement('a');
-          card.className = 'project-card';
-          card.href = project.path;
-          card.innerHTML = \`
-            <div class="icon">\${project.icon}</div>
-            <div class="name">\${project.name}</div>
-            <div class="desc">\${project.description || 'No description'}</div>
-            <div class="tech">\${project.tech}</div>
-          \`;
-
-          grid.appendChild(card);
+        for (const p of matched) {
+          html += \`<a class="project-card" href="\${p.path}">
+            <div class="icon">\${p.icon}</div>
+            <div class="name">\${p.name}</div>
+            <div class="desc">\${p.description || 'No description'}</div>
+            <div class="tech">\${p.tech}</div>
+          </a>\`;
         }
 
-        categoryDiv.appendChild(header);
-        categoryDiv.appendChild(grid);
-        projectsContainer.appendChild(categoryDiv);
+        html += '</div></div>';
       }
+
+      projectsContainer.innerHTML = html || '<div class="no-results">No projects found</div>';
     }
 
     renderProjects();
 
+    let debounce;
     searchInput.addEventListener('input', (e) => {
-      renderProjects(e.target.value);
+      clearTimeout(debounce);
+      debounce = setTimeout(() => renderProjects(e.target.value), 150);
+    });
+
+    document.getElementById('refresh').addEventListener('click', async () => {
+      const btn = document.getElementById('refresh');
+      btn.textContent = '⏳';
+      try {
+        const res = await fetch('http://localhost:3131/refresh');
+        if (res.ok) { btn.textContent = '✓'; setTimeout(() => location.reload(), 300); }
+        else { btn.textContent = '✗'; setTimeout(() => { btn.innerHTML = '&#x21BB;'; }, 2000); }
+      } catch {
+        btn.textContent = '✗';
+        setTimeout(() => { btn.innerHTML = '&#x21BB;'; }, 2000);
+      }
     });
   </script>
 </body>
@@ -456,5 +697,10 @@ const html = generateHTML(projects);
 const outputPath = path.join(__dirname, 'index.html');
 fs.writeFileSync(outputPath, html, 'utf8');
 
+const summaryHTML = generateSummaryHTML(projects);
+const summaryOutputPath = path.join(__dirname, 'summary.html');
+fs.writeFileSync(summaryOutputPath, summaryHTML, 'utf8');
+
 console.log(`\nGenerated ${outputPath}`);
-console.log(`Open it in your browser to browse your projects!`);
+console.log(`Generated ${summaryOutputPath}`);
+console.log(`Open index.html in your browser to browse your projects!`);
