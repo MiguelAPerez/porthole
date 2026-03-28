@@ -445,24 +445,17 @@ function generateSummaryHTML(projects) {
 }
 
 function generateHTML(projects) {
-  const grouped = {};
-
-  for (const project of projects) {
-    const key = project.tech;
-    if (!grouped[key]) {
-      grouped[key] = {
-        tech: key,
-        icon: project.icon,
-        color: project.color,
-        projects: []
-      };
-    }
-    grouped[key].projects.push(project);
+  // Build unique tech list in order of first appearance (already sorted by recency)
+  const techs = [];
+  for (const p of projects) {
+    if (!techs.includes(p.tech)) techs.push(p.tech);
   }
 
-  const categories = Object.keys(grouped).sort();
+  const pillsHTML = techs.map(t =>
+    `<button class="pill" data-tech="${t}">${getTechIcon(t)} ${t}</button>`
+  ).join('');
 
-  let html = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -479,11 +472,7 @@ function generateHTML(projects) {
       --hover: #1f242c;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
@@ -495,29 +484,26 @@ function generateHTML(projects) {
 
     .header {
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
-    .header h1 {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
+    .header h1 { font-size: 2rem; margin-bottom: 0.25rem; }
+    .header p { color: var(--muted); }
+
+    .controls {
+      max-width: 760px;
+      margin: 0 auto 1.5rem;
     }
 
-    .header p {
-      color: var(--muted);
-    }
-
-    .search {
-      max-width: 440px;
-      margin: 0 auto 2rem;
+    .search-row {
       display: flex;
       gap: 0.5rem;
-      align-items: center;
+      margin-bottom: 0.75rem;
     }
 
-    .search input {
+    .search-row input {
       flex: 1;
-      padding: 0.75rem 1rem;
+      padding: 0.65rem 1rem;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--card-bg);
@@ -526,149 +512,97 @@ function generateHTML(projects) {
       outline: none;
     }
 
-    .search input:focus {
-      border-color: var(--accent);
-    }
-
-    .search-progress {
-      max-width: 440px;
-      margin: -1.5rem auto 1.5rem;
-      height: 2px;
-      background: transparent;
-      overflow: hidden;
-      border-radius: 1px;
-    }
-
-    .search-progress.active::after {
-      content: '';
-      display: block;
-      height: 100%;
-      width: 35%;
-      background: var(--accent);
-      border-radius: 1px;
-      animation: locus-scan 1.2s ease-in-out infinite;
-    }
-
-    @keyframes locus-scan {
-      0%   { transform: translateX(-200%); }
-      100% { transform: translateX(400%); }
-    }
+    .search-row input:focus { border-color: var(--accent); }
 
     .refresh-btn {
-      padding: 0.75rem 0.875rem;
+      padding: 0.65rem 0.875rem;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--card-bg);
       color: var(--text);
       font-size: 1rem;
       cursor: pointer;
-      line-height: 1;
       flex-shrink: 0;
+      line-height: 1;
     }
 
-    .refresh-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
+    .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
     }
 
-    .projects {
-      max-width: 1200px;
+    .pill {
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 0.8rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .pill:hover { border-color: var(--accent); color: var(--text); }
+    .pill.active { background: var(--card-bg); border-color: var(--accent); color: var(--accent); }
+
+    .list {
+      max-width: 760px;
       margin: 0 auto;
     }
 
-    .category {
-      margin-bottom: 2rem;
-    }
-
-    .category-header {
+    .project-row {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .category-header h2 {
-      font-size: 1.25rem;
-      color: var(--text);
-    }
-
-    .category-header .icon {
-      font-size: 1.5rem;
-    }
-
-    .category-header .count {
-      margin-left: auto;
-      color: var(--muted);
-      font-size: 0.875rem;
-    }
-
-    .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1rem;
-    }
-
-    .project-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem;
-      cursor: pointer;
+      gap: 0.75rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
       text-decoration: none;
       color: inherit;
-      display: block;
     }
 
-    body:not(.scrolling) .project-card:hover {
-      border-color: var(--accent);
-    }
+    body:not(.scrolling) .project-row:hover { background: var(--hover); }
 
-    .project-card .icon {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-    }
+    .project-row .icon { font-size: 1.1rem; flex-shrink: 0; width: 1.5rem; text-align: center; }
 
-    .project-card .name {
+    .project-row .name {
       font-weight: 600;
-      font-size: 1.1rem;
-      margin-bottom: 0.25rem;
-    }
-
-    .project-card .desc {
-      color: var(--muted);
-      font-size: 0.875rem;
-      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      min-width: 160px;
+      max-width: 200px;
       overflow: hidden;
       text-overflow: ellipsis;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
     }
 
-    .project-card .tech {
-      font-size: 0.75rem;
+    .project-row .desc {
+      flex: 1;
       color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      font-size: 0.875rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .project-row .time {
+      color: var(--muted);
+      font-size: 0.8rem;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .no-results {
       text-align: center;
       padding: 3rem;
       color: var(--muted);
-      grid-column: 1 / -1;
     }
 
     @media (max-width: 640px) {
-      body {
-        padding: 1rem;
-      }
-
-      .projects-grid {
-        grid-template-columns: 1fr;
-      }
+      body { padding: 1rem; }
+      .project-row .desc { display: none; }
+      .project-row .name { max-width: none; flex: 1; }
     }
   </style>
 </head>
@@ -678,118 +612,108 @@ function generateHTML(projects) {
     <p>Browse through all your development projects &mdash; <a href="summary.html" style="color: var(--accent); text-decoration: none;">view summary</a></p>
   </div>
 
-  <div class="search">
-    <input type="search" id="search" placeholder="Search projects...">
-    <button id="refresh" class="refresh-btn" title="Regenerate projects (requires: node server.js)">&#x21BB;</button>
+  <div class="controls">
+    <div class="search-row">
+      <input type="search" id="search" placeholder="Search projects...">
+      <button id="refresh" class="refresh-btn" title="Regenerate projects (requires: node server.js)">&#x21BB;</button>
+    </div>
+    <div class="pills" id="pills">
+      <button class="pill active" data-tech="">All</button>
+      ${pillsHTML}
+    </div>
   </div>
-  <div class="search-progress" id="search-progress"></div>
 
-  <div class="projects" id="projects"></div>
+  <div class="list" id="list"></div>
 
   <script>
-    const projects = ${JSON.stringify(grouped, null, 2)};
+    const projects = ${JSON.stringify(projects)};
 
-    const projectsContainer = document.getElementById('projects');
-    const searchInput = document.getElementById('search');
-    const searchProgress = document.getElementById('search-progress');
-
-    const projectMap = {};
-    for (const cat of Object.values(projects)) {
-      for (const p of cat.projects) projectMap[p.name] = p;
+    function relativeTime(ms) {
+      const diff = Date.now() - ms;
+      const min = 60 * 1000;
+      const hour = 60 * min;
+      const day = 24 * hour;
+      const week = 7 * day;
+      const month = 30 * day;
+      if (diff < min) return 'just now';
+      if (diff < hour) return Math.floor(diff / min) + 'm ago';
+      if (diff < day) return Math.floor(diff / hour) + 'h ago';
+      if (diff < week) return Math.floor(diff / day) + 'd ago';
+      if (diff < month) return Math.floor(diff / week) + 'w ago';
+      return Math.floor(diff / month) + 'mo ago';
     }
 
-    function cardHTML(p) {
-      return \`<a class="project-card" href="\${p.path}">
-        <div class="icon">\${p.icon}</div>
-        <div class="name">\${p.name}</div>
-        <div class="desc">\${p.description || 'No description'}</div>
-        <div class="tech">\${p.tech}</div>
-      </a>\`;
+    const listEl = document.getElementById('list');
+    const searchEl = document.getElementById('search');
+    const pillsEl = document.getElementById('pills');
+
+    let activeTech = '';
+    let renderGen = 0;
+
+    function getFiltered() {
+      const q = searchEl.value.toLowerCase();
+      return projects.filter(p => {
+        if (activeTech && p.tech !== activeTech) return false;
+        if (!q) return true;
+        return p.name.toLowerCase().includes(q) ||
+               p.tech.toLowerCase().includes(q) ||
+               (p.description && p.description.toLowerCase().includes(q));
+      });
     }
 
-    function renderProjects(filter = '') {
-      const lc = filter.toLowerCase();
-      let html = '';
+    function renderProjects() {
+      const gen = ++renderGen;
+      const filtered = getFiltered();
 
-      for (const category of Object.values(projects)) {
-        const matched = filter
-          ? category.projects.filter(p =>
-              p.name.toLowerCase().includes(lc) ||
-              p.tech.toLowerCase().includes(lc) ||
-              (p.description && p.description.toLowerCase().includes(lc))
-            )
-          : category.projects;
-
-        if (matched.length === 0) continue;
-
-        html += \`<div class="category">
-          <div class="category-header">
-            <span class="icon">\${category.icon}</span>
-            <h2>\${category.tech}</h2>
-            <span class="count">\${matched.length} projects</span>
-          </div>
-          <div class="projects-grid">\`;
-        for (const p of matched) html += cardHTML(p);
-        html += '</div></div>';
-      }
-
-      projectsContainer.innerHTML = html || '<div class="no-results">No projects found</div>';
-    }
-
-    function renderLocusResults(results) {
-      const seen = new Map();
-      for (const r of results) {
-        const name = r.metadata && r.metadata.source;
-        const p = name && projectMap[name];
-        if (!p) continue;
-        if (!seen.has(name) || r.score > seen.get(name).score) seen.set(name, { p, score: r.score });
-      }
-
-      if (seen.size === 0) {
-        projectsContainer.innerHTML = '<div class="no-results">No projects found</div>';
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="no-results">No projects found</div>';
         return;
       }
 
-      let html = \`<div class="category"><div class="category-header"><span class="icon">🔍</span><h2>Semantic results</h2><span class="count">\${seen.size} projects</span></div><div class="projects-grid">\`;
-      for (const { p } of seen.values()) html += cardHTML(p);
-      html += '</div></div>';
-      projectsContainer.innerHTML = html;
+      const BATCH = 30;
+      let offset = 0;
+
+      function rowHTML(p) {
+        return \`<a class="project-row" href="\${p.path}">
+          <span class="icon">\${p.icon}</span>
+          <span class="name">\${p.name}</span>
+          <span class="desc">\${p.description || 'No description'}</span>
+          <span class="time">\${relativeTime(p.lastModified)}</span>
+        </a>\`;
+      }
+
+      // First batch — synchronous
+      const first = filtered.slice(0, BATCH);
+      listEl.innerHTML = first.map(rowHTML).join('');
+      offset = BATCH;
+
+      function appendNext() {
+        if (gen !== renderGen) return; // cancelled
+        if (offset >= filtered.length) return;
+        const chunk = filtered.slice(offset, offset + BATCH);
+        listEl.insertAdjacentHTML('beforeend', chunk.map(rowHTML).join(''));
+        offset += BATCH;
+        requestAnimationFrame(appendNext);
+      }
+
+      if (offset < filtered.length) requestAnimationFrame(appendNext);
     }
 
     renderProjects();
 
     let debounce;
-    let currentQuery = '';
-
-    searchInput.addEventListener('input', (e) => {
+    searchEl.addEventListener('input', () => {
       clearTimeout(debounce);
-      const query = e.target.value.trim();
-      currentQuery = query;
+      debounce = setTimeout(renderProjects, 150);
+    });
 
-      if (!query) {
-        searchProgress.classList.remove('active');
-        renderProjects();
-        return;
-      }
-
-      debounce = setTimeout(async () => {
-        searchProgress.classList.add('active');
-        try {
-          const res = await fetch(
-            \`https://locus.miguelaperez.dev/spaces/projects/search?q=\${encodeURIComponent(query)}&k=10\`,
-            { signal: AbortSignal.timeout(3000) }
-          );
-          if (!res.ok) throw new Error('non-ok');
-          const data = await res.json();
-          if (currentQuery !== query) return;
-          searchProgress.classList.remove('active');
-          renderLocusResults(data.results || []);
-        } catch {
-          if (currentQuery !== query) return;
-          searchProgress.classList.remove('active');
-          renderProjects(query);
-        }
-      }, 300);
+    pillsEl.addEventListener('click', e => {
+      const pill = e.target.closest('.pill');
+      if (!pill) return;
+      pillsEl.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      activeTech = pill.dataset.tech;
+      renderProjects();
     });
 
     let scrollTimer;
@@ -814,8 +738,6 @@ function generateHTML(projects) {
   </script>
 </body>
 </html>`;
-
-  return html;
 }
 
 // ── Locus sync ────────────────────────────────────────────────────────────────
