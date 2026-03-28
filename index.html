@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects View</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --border: #30363d;
+      --accent: #58a6ff;
+      --hover: #1f242c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+      line-height: 1.5;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      color: var(--muted);
+    }
+
+    .search {
+      max-width: 400px;
+      margin: 0 auto 2rem;
+      position: relative;
+    }
+
+    .search input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search input:focus {
+      border-color: var(--accent);
+    }
+
+    .projects {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .category {
+      margin-bottom: 2rem;
+    }
+
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .category-header h2 {
+      font-size: 1.25rem;
+      color: var(--text);
+    }
+
+    .category-header .icon {
+      font-size: 1.5rem;
+    }
+
+    .category-header .count {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .project-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .project-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .project-card .icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .project-card .name {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .project-card .desc {
+      color: var(--muted);
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .project-card .tech {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 3rem;
+      color: var(--muted);
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1rem;
+      }
+
+      .projects-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>📁 Projects</h1>
+    <p>Browse through all your development projects</p>
+  </div>
+
+  <div class="search">
+    <input type="search" id="search" placeholder="Search projects...">
+  </div>
+
+  <div class="projects" id="projects"></div>
+
+  <script>
+    const projects = {
+  "Unknown": {
+    "tech": "Unknown",
+    "icon": "📁",
+    "color": "#888888",
+    "projects": [
+      {
+        "name": "BeamMP-Server",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "[![CMake Windows Build](https://github.com/BeamMP/BeamMP-Server/workflows/CMake%20Windows%20Build/ba",
+        "path": "/BeamMP-Server"
+      },
+      {
+        "name": "Skills",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "This is a collection of skills for an agent to use in its daily tasks. Its general structure is as f",
+        "path": "/Skills"
+      },
+      {
+        "name": "act_runner_manager",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "This tool is used to manage Act Runners. It is a python script that uses the docker cli to build and",
+        "path": "/act_runner_manager"
+      },
+      {
+        "name": "agent-tools",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/agent-tools"
+      },
+      {
+        "name": "ansible",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "```",
+        "path": "/ansible"
+      },
+      {
+        "name": "apartment-rent-tracker",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "This is a project to track the price of apartments in a specific area.",
+        "path": "/apartment-rent-tracker"
+      },
+      {
+        "name": "automate",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "```bash",
+        "path": "/automate"
+      },
+      {
+        "name": "automate-hosting",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "A simple approach to automate self-hosting containers. This project sets up and teardown a container",
+        "path": "/automate-hosting"
+      },
+      {
+        "name": "automation-services",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "[![Build Status](https://build.miguelaperez.dev/api/badges/mperez/automation-services/status.svg?ref",
+        "path": "/automation-services"
+      },
+      {
+        "name": "claude-code",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/claude-code"
+      },
+      {
+        "name": "coding-agent-configs",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/coding-agent-configs"
+      },
+      {
+        "name": "creality-k2-metrics-exporter",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "This project provides a Prometheus exporter for monitoring Creality K2 3D printers. It connects to t",
+        "path": "/creality-k2-metrics-exporter"
+      },
+      {
+        "name": "datasources-manager",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "[![CI](https://github.com/MiguelAPerez/locus/actions/workflows/ci.yml/badge.svg)](https://github.com",
+        "path": "/datasources-manager"
+      },
+      {
+        "name": "dev_env",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/dev_env"
+      },
+      {
+        "name": "env",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "<!-- TABLE OF CONTENTS -->",
+        "path": "/env"
+      },
+      {
+        "name": "github-readme-updater",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "This project was made to help generate a `README.md` file for your Github profile. It's built using ",
+        "path": "/github-readme-updater"
+      },
+      {
+        "name": "homelab",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/homelab"
+      },
+      {
+        "name": "infrastructure",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "[![Build Status](https://build.miguelaperez.dev/api/badges/mperez/infrastructure/status.svg?ref=refs",
+        "path": "/infrastructure"
+      },
+      {
+        "name": "iot",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/iot"
+      },
+      {
+        "name": "le-cleaning-service",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/le-cleaning-service"
+      },
+      {
+        "name": "ledger-web",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "Start php server with `php -S 127.0.0.1:8000` and open [http://127.0.0.1:8000](http://127.0.0.1:8000",
+        "path": "/ledger-web"
+      },
+      {
+        "name": "mazda",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/mazda"
+      },
+      {
+        "name": "mcp",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/mcp"
+      },
+      {
+        "name": "miguelaperez",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "<h1>",
+        "path": "/miguelaperez"
+      },
+      {
+        "name": "playground",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/playground"
+      },
+      {
+        "name": "projects-view",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/projects-view"
+      },
+      {
+        "name": "redirect-server",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "<!-- markdownlint-disable MD029 -->",
+        "path": "/redirect-server"
+      },
+      {
+        "name": "repo-templates",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/repo-templates"
+      },
+      {
+        "name": "request-review-bot",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/request-review-bot"
+      },
+      {
+        "name": "terraform",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "This project is used to generate my personal lab",
+        "path": "/terraform"
+      },
+      {
+        "name": "vscode-extensions",
+        "tech": "Unknown",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "",
+        "path": "/vscode-extensions"
+      }
+    ]
+  },
+  "React": {
+    "tech": "React",
+    "icon": "⚛️",
+    "color": "#61dafb",
+    "projects": [
+      {
+        "name": "Documentation",
+        "tech": "React",
+        "icon": "⚛️",
+        "color": "#61dafb",
+        "description": "[![Tests Status](https://gitea.miguelaperez.dev/mperez/Documentation/actions/workflows/tests.yml/bad",
+        "path": "/Documentation"
+      },
+      {
+        "name": "activepieces",
+        "tech": "React",
+        "icon": "⚛️",
+        "color": "#61dafb",
+        "description": "<h1 align=\"center\">",
+        "path": "/activepieces"
+      },
+      {
+        "name": "portfolio-docusaurus",
+        "tech": "React",
+        "icon": "⚛️",
+        "color": "#61dafb",
+        "description": "```bash",
+        "path": "/portfolio-docusaurus"
+      },
+      {
+        "name": "rent-tracker",
+        "tech": "React",
+        "icon": "⚛️",
+        "color": "#61dafb",
+        "description": "<p align=\"center\"><a href=\"https://laravel.com\" target=\"_blank\"><img src=\"https://raw.githubusercont",
+        "path": "/rent-tracker"
+      },
+      {
+        "name": "trading-bot",
+        "tech": "React",
+        "icon": "⚛️",
+        "color": "#61dafb",
+        "description": "<p align=\"center\"><a href=\"https://laravel.com\" target=\"_blank\"><img src=\"https://raw.githubusercont",
+        "path": "/trading-bot"
+      }
+    ]
+  },
+  "JavaScript/Node.js": {
+    "tech": "JavaScript/Node.js",
+    "icon": "📁",
+    "color": "#888888",
+    "projects": [
+      {
+        "name": "Ledger",
+        "tech": "JavaScript/Node.js",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "```shell",
+        "path": "/Ledger"
+      },
+      {
+        "name": "activebiz",
+        "tech": "JavaScript/Node.js",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "<p align=\"center\">",
+        "path": "/activebiz"
+      },
+      {
+        "name": "ezfolio",
+        "tech": "JavaScript/Node.js",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "<p align=\"center\">",
+        "path": "/ezfolio"
+      },
+      {
+        "name": "portfolio",
+        "tech": "JavaScript/Node.js",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "________  ________  ________  _________  ________ ________  ___       ___  ________",
+        "path": "/portfolio"
+      },
+      {
+        "name": "portfolio-8.1",
+        "tech": "JavaScript/Node.js",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "________  ________  ________  _________  ________ ________  ___       ___  ________",
+        "path": "/portfolio-8.1"
+      },
+      {
+        "name": "tabby",
+        "tech": "JavaScript/Node.js",
+        "icon": "📁",
+        "color": "#888888",
+        "description": "<div align=\"center\">",
+        "path": "/tabby"
+      }
+    ]
+  },
+  "Next.js": {
+    "tech": "Next.js",
+    "icon": "⚡",
+    "color": "#000000",
+    "projects": [
+      {
+        "name": "blog",
+        "tech": "Next.js",
+        "icon": "⚡",
+        "color": "#000000",
+        "description": "name: Pagination with SSG",
+        "path": "/blog"
+      },
+      {
+        "name": "coding-agent",
+        "tech": "Next.js",
+        "icon": "⚡",
+        "color": "#000000",
+        "description": "A simple repository manager for your coding projects. Its used to make quick updates or submit simpl",
+        "path": "/coding-agent"
+      },
+      {
+        "name": "iot-agent",
+        "tech": "Next.js",
+        "icon": "⚡",
+        "color": "#000000",
+        "description": "<!-- markdownlint-disable MD029 -->",
+        "path": "/iot-agent"
+      }
+    ]
+  },
+  "TypeScript": {
+    "tech": "TypeScript",
+    "icon": "🔷",
+    "color": "#3178c6",
+    "projects": [
+      {
+        "name": "locus-mcp",
+        "tech": "TypeScript",
+        "icon": "🔷",
+        "color": "#3178c6",
+        "description": "MCP server for Locus — semantic dataspace manager",
+        "path": "/locus-mcp"
+      },
+      {
+        "name": "obsidian-context-sync",
+        "tech": "TypeScript",
+        "icon": "🔷",
+        "color": "#3178c6",
+        "description": "Obsidian plugin for RecallLocus semantic search",
+        "path": "/obsidian-context-sync"
+      }
+    ]
+  },
+  "Node.js API": {
+    "tech": "Node.js API",
+    "icon": "🟢",
+    "color": "#68a063",
+    "projects": [
+      {
+        "name": "openTelementry-nodejs-example",
+        "tech": "Node.js API",
+        "icon": "🟢",
+        "color": "#68a063",
+        "description": "First app A",
+        "path": "/openTelementry-nodejs-example"
+      }
+    ]
+  },
+  "Astro": {
+    "tech": "Astro",
+    "icon": "🌟",
+    "color": "#222222",
+    "projects": [
+      {
+        "name": "personal-portfolio",
+        "tech": "Astro",
+        "icon": "🌟",
+        "color": "#222222",
+        "description": "```sh",
+        "path": "/personal-portfolio"
+      }
+    ]
+  }
+};
+
+    const projectsContainer = document.getElementById('projects');
+    const searchInput = document.getElementById('search');
+
+    function renderProjects(filter = '') {
+      projectsContainer.innerHTML = '';
+
+      const filteredProjects = [];
+
+      for (const category of Object.values(projects)) {
+        const filteredCategoryProjects = category.projects.filter(p =>
+          p.name.toLowerCase().includes(filter.toLowerCase()) ||
+          p.tech.toLowerCase().includes(filter.toLowerCase()) ||
+          (p.description && p.description.toLowerCase().includes(filter.toLowerCase()))
+        );
+
+        if (filteredCategoryProjects.length > 0) {
+          filteredProjects.push({
+            ...category,
+            projects: filteredCategoryProjects
+          });
+        }
+      }
+
+      if (filteredProjects.length === 0) {
+        projectsContainer.innerHTML = '<div class="no-results">No projects found</div>';
+        return;
+      }
+
+      for (const category of filteredProjects) {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'category';
+
+        const header = document.createElement('div');
+        header.className = 'category-header';
+        header.innerHTML = `
+          <span class="icon">${category.icon}</span>
+          <h2>${category.tech}</h2>
+          <span class="count">${category.projects.length} projects</span>
+        `;
+
+        const grid = document.createElement('div');
+        grid.className = 'projects-grid';
+
+        for (const project of category.projects) {
+          const card = document.createElement('a');
+          card.className = 'project-card';
+          card.href = project.path;
+          card.innerHTML = `
+            <div class="icon">${project.icon}</div>
+            <div class="name">${project.name}</div>
+            <div class="desc">${project.description || 'No description'}</div>
+            <div class="tech">${project.tech}</div>
+          `;
+
+          grid.appendChild(card);
+        }
+
+        categoryDiv.appendChild(header);
+        categoryDiv.appendChild(grid);
+        projectsContainer.appendChild(categoryDiv);
+      }
+    }
+
+    renderProjects();
+
+    searchInput.addEventListener('input', (e) => {
+      renderProjects(e.target.value);
+    });
+  </script>
+</body>
+</html>
