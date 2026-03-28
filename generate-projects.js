@@ -10,7 +10,7 @@ const crypto = require('crypto');
 
 const DEV_DIR = '/Users/miguelperez/development';
 
-const LOCUS_URL = 'https://locus.miguelaperez.dev';
+const LOCUS_URL = 'http://localhost:8000';
 const LOCUS_SPACE = 'projects';
 const CACHE_PATH = path.join(__dirname, '.locus-cache.json');
 
@@ -135,6 +135,20 @@ function extractDescription(pkg, composer) {
   return '';
 }
 
+function getLastModified(dirPath) {
+  let newest = 0;
+  try {
+    newest = fs.statSync(dirPath).mtimeMs;
+    for (const entry of fs.readdirSync(dirPath, { withFileTypes: true })) {
+      try {
+        const s = fs.statSync(path.join(dirPath, entry.name));
+        if (s.mtimeMs > newest) newest = s.mtimeMs;
+      } catch { /* ignore */ }
+    }
+  } catch { /* ignore */ }
+  return newest;
+}
+
 function scanProjects() {
   const projects = [];
 
@@ -188,12 +202,15 @@ function scanProjects() {
         color: getTechColor(tech),
         description,
         readme,
-        path: `file://${path.join(DEV_DIR, entry.name)}`
+        path: `file://${path.join(DEV_DIR, entry.name)}`,
+        lastModified: getLastModified(dirPath)
       });
     }
   } catch (e) {
     console.error('Error scanning projects:', e.message);
   }
+
+  projects.sort((a, b) => b.lastModified - a.lastModified);
 
   return projects;
 }
