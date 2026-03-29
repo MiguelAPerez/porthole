@@ -8,9 +8,14 @@ const pillsEl = document.getElementById('pills');
 const settingsBtn = document.getElementById('settingsBtn');
 const settingsModal = document.getElementById('settingsModal');
 const closeSettingsBtn = document.getElementById('closeSettings');
-const saveSettingsBtn = document.getElementById('saveSettings');
-const detailsModal = document.getElementById('detailsModal');
 const closeDetailsBtn = document.getElementById('closeDetails');
+
+function sanitize(str) {
+  if (!str) return '';
+  return str.replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[m]);
+}
 
 let selectedProject = null;
 async function init() {
@@ -112,18 +117,22 @@ function renderProjects() {
   let offset = 0;
 
   function rowHTML(p, index) {
-    const rawPath = p.path.replace('file://', '');
+    const rawPath = p.path.replace('file://', '').replace(/'/g, "\\'");
+    const escapedPath = p.path.replace(/'/g, "\\'");
+    const name = sanitize(p.name);
+    const desc = sanitize(p.description || 'No description');
+    
     return `
     <div class="project-row-container">
       <a class="project-row" href="#" onclick="event.preventDefault(); openDetails(${index})">
         <span class="icon">${p.icon}</span>
-        <span class="name">${p.name}</span>
-        <span class="desc">${p.description || 'No description'}</span>
+        <span class="name">${name}</span>
+        <span class="desc">${desc}</span>
         <span class="time">${relativeTime(p.lastModified)}</span>
       </a>
       <div class="row-actions">
-        <button class="action-btn" title="Open in Finder" onclick="openProjectPath(event, '${p.path}', 'finder')">📂</button>
-        <button class="action-btn" title="Open in VS Code" onclick="openProjectPath(event, '${p.path}', 'vscode')">💻</button>
+        <button class="action-btn" title="Open in Finder" onclick="openProjectPath(event, '${escapedPath}', 'finder')">📂</button>
+        <button class="action-btn" title="Open in VS Code" onclick="openProjectPath(event, '${escapedPath}', 'vscode')">💻</button>
         <button class="copy-btn" title="Copy directory path" onclick="copyToClipboard(event, '${rawPath}')">📋</button>
       </div>
     </div>`;

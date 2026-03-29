@@ -1,5 +1,12 @@
 let projects = [];
 
+function sanitize(str) {
+  if (!str) return '';
+  return str.replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[m]);
+}
+
 async function init() {
   try {
     const res = await fetch('/projects.json');
@@ -46,26 +53,29 @@ function renderSummary() {
     const icon = p ? p.icon : '📁';
     const color = p ? p.color : '#888888';
 
+    const sTech = sanitize(tech);
     html += `
       <div class="tech-section">
         <div class="header">
           <span style="color: ${color}">${icon}</span>
-          <h2>${tech}</h2>
+          <h2>${sTech}</h2>
           <span class="count">${count} projects</span>
         </div>
         <div class="tech-list">
     `;
 
     for (const project of techProjects) {
+      const escapedPath = project.path.replace(/'/g, "\\'");
+      const sName = sanitize(project.name);
       html += `
           <div class="tech-item-container">
             <a href="index.html?project=${encodeURIComponent(project.name)}" class="tech-item" style="border-left: 3px solid ${project.color || color}">
               <span class="icon">${project.icon || icon}</span>
-              <span class="name">${project.name}</span>
+              <span class="name">${sName}</span>
             </a>
             <div class="row-actions">
-              <button class="action-btn" title="Open in Finder" onclick="openProjectPath(event, '${project.path}', 'finder')">📂</button>
-              <button class="action-btn" title="Open in VS Code" onclick="openProjectPath(event, '${project.path}', 'vscode')">💻</button>
+              <button class="action-btn" title="Open in Finder" onclick="openProjectPath(event, '${escapedPath}', 'finder')">📂</button>
+              <button class="action-btn" title="Open in VS Code" onclick="openProjectPath(event, '${escapedPath}', 'vscode')">💻</button>
             </div>
           </div>
       `;
