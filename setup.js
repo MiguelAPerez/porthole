@@ -41,7 +41,7 @@ async function setup() {
 
   // Define defaults
   const defaults = {
-    DEV_DIR: existingConfig.DEV_DIR || path.join(os.homedir(), 'projects'),
+    DEV_DIR: existingConfig.DEV_DIR || path.join(os.homedir(), 'development'),
     LOCUS_URL: existingConfig.LOCUS_URL || 'http://localhost:8000',
     LOCUS_SPACE: existingConfig.LOCUS_SPACE || 'projects'
   };

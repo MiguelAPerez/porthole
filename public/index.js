@@ -51,6 +51,7 @@ async function loadConfig() {
     const res = await fetch('/settings');
     if (res.ok) {
       const config = await res.json();
+      if (document.getElementById('devDir')) document.getElementById('devDir').value = config.DEV_DIR || '';
       document.getElementById('locusUrl').value = config.LOCUS_URL || '';
       document.getElementById('locusSpace').value = config.LOCUS_SPACE || '';
     }
@@ -213,6 +214,7 @@ function setupEventListeners() {
     saveSettingsBtn.disabled = true;
 
     const payload = {
+      DEV_DIR: document.getElementById('devDir').value,
       LOCUS_URL: document.getElementById('locusUrl').value,
       LOCUS_SPACE: document.getElementById('locusSpace').value
     };
