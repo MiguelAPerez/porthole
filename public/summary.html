@@ -3,169 +3,84 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projects Summary</title>
+  <title>Projects Dashboard | Analytics</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    .stats {
-      max-width: 800px;
-      margin: 0 auto 2rem;
-    }
-
-    .stat-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-      text-align: center;
-    }
-
-    .stat-card .number {
-      font-size: 3rem;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    .stat-card .label {
-      color: var(--muted);
-      font-size: 0.875rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .tech-breakdown {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .tech-section {
-      margin-bottom: 2rem;
-    }
-
-    .tech-section .header {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .tech-section h2 {
-      font-size: 1.25rem;
-      color: var(--text);
-    }
-
-    .tech-section .count {
-      margin-left: auto;
-      color: var(--muted);
-      font-size: 0.875rem;
-    }
-
-    .tech-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .tech-item-container {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-
-    .tech-item {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-      text-decoration: none;
-      color: inherit;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .tech-item:hover {
-      background: var(--hover);
-    }
-
-    .tech-item .icon {
-      font-size: 1.5rem;
-    }
-
-    .tech-item .name {
-      font-weight: 600;
-      flex: 1;
-      min-width: 0;
-      word-wrap: break-word;
-    }
-
-    .row-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      padding-right: 0.5rem;
-    }
-
-    .action-btn {
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--muted);
-      border-radius: 6px;
-      padding: 0.4rem;
-      cursor: pointer;
-      font-size: 1.2rem;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 36px;
-      height: 36px;
-    }
-    
-    .action-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--border);
-      color: var(--accent);
-      transform: translateY(-2px) scale(1.1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-    
-    .action-btn:active {
-      transform: translateY(0) scale(0.95);
-    }
-
-    #loading {
-      text-align: center;
-      padding: 2rem;
-      color: var(--muted);
-    }
-  </style>
+  <link rel="stylesheet" href="summary.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="header">
-    <h1>📊 Projects Summary</h1>
-    <p>Overview of your development projects</p>
-  </div>
-
-  <div id="loading">Loading summary...</div>
-
-  <div class="stats" id="statsContainer" style="display: none;">
-    <div class="stat-card">
-      <div class="number" id="totalCount">0</div>
-      <div class="label">Total Projects</div>
+  <div class="dashboard-container">
+    <div class="header">
+      <h1><span class="icon">📊</span> Projects Dashboard</h1>
+      <p>System overview and visual analytics</p>
     </div>
-  </div>
 
-  <div class="tech-breakdown" id="breakdownContainer" style="display: none;">
-    <!-- Populated by JS -->
-  </div>
+    <div id="loading">✨ Analyzing projects and Git repositories...</div>
 
-  <div class="nav-links">
-    <a href="index.html">📁 Browse All Projects</a>
+    <div id="dashboardContent" class="hidden">
+      <!-- Key Metrics -->
+      <div class="metrics-row" id="metricsContainer">
+        <div class="metric-card">
+          <div class="value" id="totalProjects">0</div>
+          <div class="label">Total Projects</div>
+        </div>
+        <div class="metric-card">
+          <div class="value" id="activeStacks">0</div>
+          <div class="label">Tech Stacks</div>
+        </div>
+        <div class="metric-card">
+          <div class="value" id="recentPulse">0</div>
+          <div class="label">Updated (7d)</div>
+        </div>
+        <div class="metric-card">
+            <div class="value" id="gitHealth">0%</div>
+            <div class="label">Git Health</div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="charts-grid">
+        <div class="chart-container">
+            <h3><span class="icon">🥧</span> Tech Distribution</h3>
+            <canvas id="techChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3><span class="icon">📉</span> Activity Pulse</h3>
+            <canvas id="activityChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Main Dashboard Grid -->
+      <div class="dashboard-grid">
+        <!-- Recent Activity -->
+        <div class="section">
+          <h2 class="section-title"><span class="icon">🕒</span> Recent Activity</h2>
+          <div class="activity-list" id="recentActivity">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- System Pulse / Stats -->
+        <div class="section">
+          <h2 class="section-title"><span class="icon">⚡</span> System Pulse</h2>
+          <div id="systemPulseContent">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Breakdown -->
+      <div class="tech-breakdown-full">
+          <h2 class="section-title"><span class="icon">📁</span> Project Explorer</h2>
+          <div id="explorerContainer">
+              <!-- Populated by JS -->
+          </div>
+      </div>
+    </div>
+
+    <div class="nav-links">
+      <a href="index.html">🔍 Search All Projects</a>
+    </div>
   </div>
 
   <script src="summary.js"></script>
