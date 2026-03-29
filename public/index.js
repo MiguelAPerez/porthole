@@ -9,12 +9,21 @@ const settingsBtn = document.getElementById('settingsBtn');
 const settingsModal = document.getElementById('settingsModal');
 const closeSettingsBtn = document.getElementById('closeSettings');
 const saveSettingsBtn = document.getElementById('saveSettings');
+const detailsModal = document.getElementById('detailsModal');
+const closeDetailsBtn = document.getElementById('closeDetails');
 
-// Initial load
+let selectedProject = null;
 async function init() {
   await loadConfig();
   await loadProjects();
   setupEventListeners();
+
+  // Check for project in URL
+  const params = new URLSearchParams(window.location.search);
+  const projectName = params.get('project');
+  if (projectName) {
+    openDetailsByName(projectName);
+  }
 }
 
 async function loadProjects() {
@@ -102,25 +111,34 @@ function renderProjects() {
   const BATCH = 30;
   let offset = 0;
 
-  function rowHTML(p) {
-    return `<a class="project-row" href="${p.path}">
-      <span class="icon">${p.icon}</span>
-      <span class="name">${p.name}</span>
-      <span class="desc">${p.description || 'No description'}</span>
-      <span class="time">${relativeTime(p.lastModified)}</span>
-    </a>`;
+  function rowHTML(p, index) {
+    const rawPath = p.path.replace('file://', '');
+    return `
+    <div class="project-row-container">
+      <a class="project-row" href="#" onclick="event.preventDefault(); openDetails(${index})">
+        <span class="icon">${p.icon}</span>
+        <span class="name">${p.name}</span>
+        <span class="desc">${p.description || 'No description'}</span>
+        <span class="time">${relativeTime(p.lastModified)}</span>
+      </a>
+      <div class="row-actions">
+        <button class="action-btn" title="Open in Finder" onclick="openProjectPath(event, '${p.path}', 'finder')">📂</button>
+        <button class="action-btn" title="Open in VS Code" onclick="openProjectPath(event, '${p.path}', 'vscode')">💻</button>
+        <button class="copy-btn" title="Copy directory path" onclick="copyToClipboard(event, '${rawPath}')">📋</button>
+      </div>
+    </div>`;
   }
 
   // First batch — synchronous
   const first = filtered.slice(0, BATCH);
-  listEl.innerHTML = first.map(rowHTML).join('');
+  listEl.innerHTML = first.map((p, i) => rowHTML(p, i)).join('');
   offset = BATCH;
 
   function appendNext() {
     if (gen !== renderGen) return; // cancelled
     if (offset >= filtered.length) return;
     const chunk = filtered.slice(offset, offset + BATCH);
-    listEl.insertAdjacentHTML('beforeend', chunk.map(rowHTML).join(''));
+    listEl.insertAdjacentHTML('beforeend', chunk.map((p, i) => rowHTML(p, offset + i)).join(''));
     offset += BATCH;
     requestAnimationFrame(appendNext);
   }
@@ -207,6 +225,83 @@ function setupEventListeners() {
       saveSettingsBtn.disabled = false;
     }
   });
+
+  // Details Modal logic
+  closeDetailsBtn.addEventListener('click', () => {
+    detailsModal.classList.remove('active');
+  });
+
+  document.getElementById('openFinder').addEventListener('click', () => openProject('finder'));
+  document.getElementById('openCode').addEventListener('click', () => openProject('vscode'));
+}
+
+window.openDetails = function(index) {
+  const filtered = getFiltered();
+  const p = filtered[index];
+  if (!p) return;
+
+  selectedProject = p;
+  document.getElementById('detailIcon').textContent = p.icon;
+  document.getElementById('detailName').textContent = p.name;
+  document.getElementById('detailTech').textContent = p.tech;
+  document.getElementById('detailDesc').textContent = p.description || 'No description provided.';
+  document.getElementById('detailReadme').textContent = p.readme || 'No README.md found.';
+  
+  detailsModal.classList.add('active');
+}
+
+window.openDetailsByName = function(name) {
+  const p = projects.find(proj => proj.name === name);
+  if (!p) return;
+
+  selectedProject = p;
+  document.getElementById('detailIcon').textContent = p.icon;
+  document.getElementById('detailName').textContent = p.name;
+  document.getElementById('detailTech').textContent = p.tech;
+  document.getElementById('detailDesc').textContent = p.description || 'No description provided.';
+  document.getElementById('detailReadme').textContent = p.readme || 'No README.md found.';
+  
+  detailsModal.classList.add('active');
+}
+
+window.openProjectPath = async function(event, path, action) {
+  if (event) event.stopPropagation();
+  try {
+    const res = await fetch('/open', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, action })
+    });
+    if (res.ok && event) {
+        const btn = event.currentTarget ?? event.target;
+        const oldContent = btn.textContent;
+        btn.textContent = '✓';
+        setTimeout(() => { btn.textContent = oldContent; }, 1000);
+    }
+  } catch (err) {
+    console.error('Failed to open project:', err);
+  }
+}
+
+async function openProject(action) {
+  if (!selectedProject) return;
+  await openProjectPath(null, selectedProject.path, action);
+}
+
+window.copyToClipboard = async function(event, text) {
+  const btn = event.currentTarget ?? event.target;
+  try {
+    await navigator.clipboard.writeText(text);
+    const oldIcon = btn.textContent;
+    btn.textContent = '✅';
+    btn.classList.add('success');
+    setTimeout(() => {
+      btn.textContent = oldIcon;
+      btn.classList.remove('success');
+    }, 1000);
+  } catch (err) {
+    console.error('Failed to copy: ', err);
+  }
 }
 
 init();

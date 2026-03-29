@@ -4,37 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Projects View</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    :root {
-      --bg: #0d1117;
-      --card-bg: #161b22;
-      --text: #c9d1d9;
-      --muted: #8b949e;
-      --border: #30363d;
-      --accent: #58a6ff;
-      --hover: #1f242c;
-      --modal-bg: rgba(0, 0, 0, 0.7);
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      padding: 2rem;
-      line-height: 1.5;
-    }
-
-    .header {
-      position: relative;
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .header h1 { font-size: 2rem; margin-bottom: 0.25rem; }
-    .header p { color: var(--muted); }
-
     .settings-btn {
       position: absolute;
       top: 0;
@@ -146,35 +117,64 @@
 
     .project-row {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 0.75rem;
-      padding: 0.6rem 0.75rem;
+      padding: 0.8rem 0.75rem;
       border-radius: 8px;
       text-decoration: none;
       color: inherit;
+      flex: 1;
+      min-width: 0;
     }
 
     body:not(.scrolling) .project-row:hover { background: var(--hover); }
+
+    .project-row-container {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .row-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding-right: 0.5rem;
+    }
+
+    .action-btn, .copy-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--muted);
+      border-radius: 4px;
+      padding: 0.4rem;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    
+    .action-btn:hover, .copy-btn:hover {
+      background: var(--card-bg);
+      border-color: var(--border);
+      color: var(--accent);
+    }
 
     .project-row .icon { font-size: 1.1rem; flex-shrink: 0; width: 1.5rem; text-align: center; }
 
     .project-row .name {
       font-weight: 600;
       font-size: 0.95rem;
-      white-space: nowrap;
-      min-width: 160px;
-      max-width: 200px;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      width: 200px;
+      flex-shrink: 0;
+      word-wrap: break-word;
     }
 
     .project-row .desc {
       flex: 1;
       color: var(--muted);
       font-size: 0.875rem;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      min-width: 0;
+      word-wrap: break-word;
     }
 
     .project-row .time {
@@ -182,7 +182,117 @@
       font-size: 0.8rem;
       white-space: nowrap;
       flex-shrink: 0;
+      width: 60px;
+      text-align: right;
+      padding-top: 0.15rem;
     }
+
+    .copy-btn.success {
+      color: #3fb950;
+      animation: copy-success 0.4s ease;
+    }
+
+    @keyframes copy-success {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    #loading {
+      text-align: center;
+      padding: 2rem;
+      color: var(--muted);
+    }
+
+    /* Details Modal */
+    .details-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(8px);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    .details-modal.active { display: flex; }
+    .details-content {
+      background: var(--bg);
+      padding: 2rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      width: 700px;
+      max-width: 95%;
+      max-height: 85vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .details-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .details-header .icon { font-size: 2.5rem; }
+    .details-header h2 { font-size: 1.75rem; flex: 1; }
+    .details-header .tech-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+
+    .details-body { flex: 1; min-height: 0; }
+    .details-desc { color: var(--text); margin-bottom: 1.5rem; }
+    
+    .readme-box {
+      background: #000;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      max-height: 300px;
+      color: #dfdfdf;
+    }
+
+    .details-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .details-actions button {
+      flex: 1;
+      padding: 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .btn-finder { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-vscode { background: #2c974b; color: #fff; border: none; }
+    .btn-finder:hover { background: var(--hover); }
+    .btn-vscode:hover { background: #2ea44f; }
+    
+    .close-details {
+      align-self: flex-end;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.25rem;
+    }
+    .close-details:hover { color: var(--text); }
 
     .no-results {
       text-align: center;
@@ -231,6 +341,27 @@
       <div class="modal-actions">
         <button id="closeSettings" class="btn-secondary">Cancel</button>
         <button id="saveSettings" class="btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Details Modal -->
+  <div id="detailsModal" class="details-modal">
+    <div class="details-content">
+      <button id="closeDetails" class="close-details">✕</button>
+      <div class="details-header">
+        <span id="detailIcon" class="icon"></span>
+        <h2 id="detailName">Project Name</h2>
+        <span id="detailTech" class="tech-badge">Tech</span>
+      </div>
+      <div class="details-body">
+        <p id="detailDesc" class="details-desc">Project description...</p>
+        <div id="readmeLabel" style="font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; text-transform: uppercase;">README.md Snippet</div>
+        <div id="detailReadme" class="readme-box"></div>
+      </div>
+      <div class="details-actions">
+        <button id="openFinder" class="btn-finder">📂 Open in Finder</button>
+        <button id="openCode" class="btn-vscode">💻 Open in VS Code</button>
       </div>
     </div>
   </div>

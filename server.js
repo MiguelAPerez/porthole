@@ -80,6 +80,35 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.url === '/open' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      try {
+        const { path: projectPath, action } = JSON.parse(body);
+        const rawPath = projectPath.replace('file://', '');
+        
+        if (action === 'finder') {
+          execSync(`open "${rawPath}"`);
+        } else if (action === 'vscode') {
+          execSync(`code "${rawPath}"`);
+        } else {
+          res.writeHead(400);
+          res.end('Unsupported action');
+          return;
+        }
+        res.writeHead(200);
+        res.end('ok');
+      } catch (e) {
+        res.writeHead(500);
+        res.end(e.message);
+      }
+    });
+    return;
+  }
+
   // Serve projects.json from root explicitly
   if (req.url === '/projects.json' && req.method === 'GET') {
       const projectsPath = path.join(DIR, 'projects.json');

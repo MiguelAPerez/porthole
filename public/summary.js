@@ -57,13 +57,17 @@ function renderSummary() {
     `;
 
     for (const project of techProjects) {
-        // Find icon/color from project if it happened to be different (it won't normally be)
       html += `
-          <a href="${project.path}" class="tech-item" style="border-left: 3px solid ${project.color || color}">
-            <span class="icon">${project.icon || icon}</span>
-            <span class="name">${project.name}</span>
-            <span class="count">View</span>
-          </a>
+          <div class="tech-item-container">
+            <a href="index.html?project=${encodeURIComponent(project.name)}" class="tech-item" style="border-left: 3px solid ${project.color || color}">
+              <span class="icon">${project.icon || icon}</span>
+              <span class="name">${project.name}</span>
+            </a>
+            <div class="row-actions">
+              <button class="action-btn" title="Open in Finder" onclick="openProjectPath(event, '${project.path}', 'finder')">📂</button>
+              <button class="action-btn" title="Open in VS Code" onclick="openProjectPath(event, '${project.path}', 'vscode')">💻</button>
+            </div>
+          </div>
       `;
     }
 
@@ -74,6 +78,25 @@ function renderSummary() {
   }
 
   breakdownContainer.innerHTML = html;
+}
+
+window.openProjectPath = async function(event, path, action) {
+  if (event) event.stopPropagation();
+  try {
+    const res = await fetch('/open', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, action })
+    });
+    if (res.ok && event) {
+        const btn = event.currentTarget ?? event.target;
+        const oldContent = btn.textContent;
+        btn.textContent = '✓';
+        setTimeout(() => { btn.textContent = oldContent; }, 1000);
+    }
+  } catch (err) {
+    console.error('Failed to open project:', err);
+  }
 }
 
 init();
