@@ -53,3 +53,114 @@ body {
 .nav-links a:hover {
   background: var(--hover);
 }
+
+/* Markdown Styling for README */
+.readme-box {
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.readme-box h1, .readme-box h2, .readme-box h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #fff;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3rem;
+}
+
+.readme-box h1 { font-size: 1.5rem; }
+.readme-box h2 { font-size: 1.25rem; }
+.readme-box h3 { font-size: 1.1rem; }
+
+.readme-box p { margin-bottom: 1rem; }
+
+.readme-box ul, .readme-box ol {
+  margin-bottom: 1rem;
+  padding-left: 2rem;
+}
+
+.readme-box li { margin-bottom: 0.25rem; }
+
+.readme-box code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  background: rgba(110, 118, 129, 0.4);
+  padding: 0.2rem 0.4rem;
+  border-radius: 6px;
+  font-size: 85%;
+}
+
+.readme-box pre {
+  background: #161b22;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-bottom: 1rem;
+  overflow-x: auto;
+}
+
+.readme-box pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 100%;
+}
+
+.readme-box blockquote {
+  padding: 0 1rem;
+  color: var(--muted);
+  border-left: 0.25rem solid var(--border);
+  margin-bottom: 1rem;
+}
+
+.readme-box hr {
+  height: 0.25rem;
+  padding: 0;
+  margin: 1.5rem 0;
+  background-color: var(--border);
+  border: 0;
+}
+
+.readme-box a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.readme-box a:hover {
+  text-decoration: underline;
+}
+
+.readme-box table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.readme-box table th, .readme-box table td {
+  padding: 6px 13px;
+  border: 1px solid var(--border);
+}
+
+.readme-box table tr:nth-child(2n) {
+  background-color: var(--hover);
+}
+
+/* Inline Markdown Support for List Rows */
+.project-row .desc code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  background: rgba(110, 118, 129, 0.4);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  font-size: 85%;
+  color: var(--accent);
+}
+
+.project-row .desc strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.project-row .desc em {
+  font-style: italic;
+  opacity: 0.9;
+}

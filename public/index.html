@@ -189,6 +189,17 @@
       font-size: 0.875rem;
       min-width: 0;
       word-wrap: break-word;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .project-row .desc img {
+      max-height: 20px;
+      vertical-align: middle;
     }
 
     .project-row .time {
@@ -369,7 +380,7 @@
         <span id="detailTech" class="tech-badge">Tech</span>
       </div>
       <div class="details-body">
-        <p id="detailDesc" class="details-desc">Project description...</p>
+        <div id="detailDesc" class="details-desc">Project description...</div>
         <div id="readmeLabel" style="font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem; text-transform: uppercase;">README.md Snippet</div>
         <div id="detailReadme" class="readme-box"></div>
       </div>
@@ -380,6 +391,7 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="index.js"></script>
 </body>
 </html>

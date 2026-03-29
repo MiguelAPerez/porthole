@@ -8,6 +8,8 @@ const pillsEl = document.getElementById('pills');
 const settingsBtn = document.getElementById('settingsBtn');
 const settingsModal = document.getElementById('settingsModal');
 const closeSettingsBtn = document.getElementById('closeSettings');
+const saveSettingsBtn = document.getElementById('saveSettings');
+const detailsModal = document.getElementById('detailsModal');
 const closeDetailsBtn = document.getElementById('closeDetails');
 
 function sanitize(str) {
@@ -120,7 +122,7 @@ function renderProjects() {
     const rawPath = p.path.replace('file://', '').replace(/'/g, "\\'");
     const escapedPath = p.path.replace(/'/g, "\\'");
     const name = sanitize(p.name);
-    const desc = sanitize(p.description || 'No description');
+    const desc = p.description ? marked.parseInline(sanitize(p.description)) : 'No description';
     
     return `
     <div class="project-row-container">
@@ -253,8 +255,8 @@ window.openDetails = function(index) {
   document.getElementById('detailIcon').textContent = p.icon;
   document.getElementById('detailName').textContent = p.name;
   document.getElementById('detailTech').textContent = p.tech;
-  document.getElementById('detailDesc').textContent = p.description || 'No description provided.';
-  document.getElementById('detailReadme').textContent = p.readme || 'No README.md found.';
+  document.getElementById('detailDesc').innerHTML = p.description ? marked.parseInline(sanitize(p.description)) : 'No description provided.';
+  document.getElementById('detailReadme').innerHTML = p.readme ? marked.parse(sanitize(p.readme)) : 'No README.md found.';
   
   detailsModal.classList.add('active');
 }
@@ -267,8 +269,8 @@ window.openDetailsByName = function(name) {
   document.getElementById('detailIcon').textContent = p.icon;
   document.getElementById('detailName').textContent = p.name;
   document.getElementById('detailTech').textContent = p.tech;
-  document.getElementById('detailDesc').textContent = p.description || 'No description provided.';
-  document.getElementById('detailReadme').textContent = p.readme || 'No README.md found.';
+  document.getElementById('detailDesc').innerHTML = p.description ? marked.parseInline(sanitize(p.description)) : 'No description provided.';
+  document.getElementById('detailReadme').innerHTML = p.readme ? marked.parse(sanitize(p.readme)) : 'No README.md found.';
   
   detailsModal.classList.add('active');
 }
