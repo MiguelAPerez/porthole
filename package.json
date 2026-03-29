@@ -4,7 +4,10 @@
   "description": "A viewer for local development projects",
   "main": "server.js",
   "bin": {
-    "pview": "./server.js"
+    "pview": "./server.js",
+    "pview-stop": "./stop.js",
+    "pview-link": "./link.js",
+    "pview-unlink": "./unlink.js"
   },
   "scripts": {
     "start": "node server.js",

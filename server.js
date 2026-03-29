@@ -161,33 +161,26 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(PORT, async () => {
-  console.log(`Projects server running at http://localhost:${PORT}`);
-  console.log('Press Ctrl+C to stop.');
-
-  // Auto-launch the browser
-  try {
-      execSync(`open http://localhost:${PORT}`);
-  } catch (e) {
-      console.log('Could not open browser automatically, please navigate to the URL manually.');
-  }
-});
-
-// Handle the case where pview is called while already running
-async function handleExistingServer() {
-  const url = `http://localhost:${PORT}`;
-  console.log(`Server is already running at ${url}`);
-  try {
-      execSync(`open ${url}`);
-  } catch (e) {
-      console.log(`Please navigate to ${url} manually.`);
-  }
-}
-
 // Check if port is in use before starting
-isPortInUse(PORT).then(async (isInUse) => {
+isPortInUse(PORT).then((isInUse) => {
   if (isInUse) {
-    await handleExistingServer();
+    const url = `http://localhost:${PORT}`;
+    console.log(`Server is already running at ${url}`);
+    try {
+      execSync(`open ${url}`);
+    } catch (e) {
+      console.log(`Please navigate to ${url} manually.`);
+    }
     process.exit(0);
   }
+
+  server.listen(PORT, () => {
+    console.log(`Projects server running at http://localhost:${PORT}`);
+    console.log('Press Ctrl+C to stop.');
+    try {
+      execSync(`open http://localhost:${PORT}`);
+    } catch (e) {
+      console.log('Could not open browser automatically, please navigate to the URL manually.');
+    }
+  });
 });

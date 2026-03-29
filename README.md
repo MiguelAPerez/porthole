@@ -43,7 +43,9 @@ This creates a global `pview` command that you can use to start the server or ge
 ## Notes
 
 - If the server is already running, `pview` will display the URL to visit instead of starting a new instance.
-- Use `lsof -i :3131` or `lsof -i :3131` to find the process using port 3131, or `kill -9 <PID>` to stop it.
+- Use `pview-stop` to stop the server (finds and kills the process on port 3131).
+- Use `pview-unlink` to remove the global link.
+- Use `lsof -i :3131` to find the process using port 3131, or `kill -9 <PID>` to stop it manually.
 
 ## Project Structure
 
