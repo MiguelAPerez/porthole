@@ -3,8 +3,28 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const net = require('net');
 
 const PORT = 3131;
+
+// Check if port is already in use
+function isPortInUse(port) {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.listen(port, () => {
+      server.close(() => {
+        resolve(false); // Port is free
+      });
+    });
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        resolve(true); // Port is in use
+      } else {
+        reject(err);
+      }
+    });
+  });
+}
 const DIR = __dirname;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const CONFIG_PATH = path.join(__dirname, 'config.json');
@@ -141,7 +161,7 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`Projects server running at http://localhost:${PORT}`);
   console.log('Press Ctrl+C to stop.');
 
@@ -150,5 +170,24 @@ server.listen(PORT, () => {
       execSync(`open http://localhost:${PORT}`);
   } catch (e) {
       console.log('Could not open browser automatically, please navigate to the URL manually.');
+  }
+});
+
+// Handle the case where pview is called while already running
+async function handleExistingServer() {
+  const url = `http://localhost:${PORT}`;
+  console.log(`Server is already running at ${url}`);
+  try {
+      execSync(`open ${url}`);
+  } catch (e) {
+      console.log(`Please navigate to ${url} manually.`);
+  }
+}
+
+// Check if port is in use before starting
+isPortInUse(PORT).then(async (isInUse) => {
+  if (isInUse) {
+    await handleExistingServer();
+    process.exit(0);
   }
 });

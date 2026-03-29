@@ -30,6 +30,21 @@ npm start
 
 4. Click the Refresh button in the UI to generate the initial index of your projects.
 
+## Global Installation (Optional)
+
+To use `pview` from anywhere on your system:
+
+```bash
+npm link
+```
+
+This creates a global `pview` command that you can use to start the server or generate projects from any directory.
+
+## Notes
+
+- If the server is already running, `pview` will display the URL to visit instead of starting a new instance.
+- Use `lsof -i :3131` or `lsof -i :3131` to find the process using port 3131, or `kill -9 <PID>` to stop it.
+
 ## Project Structure
 
 - `public/`: Frontend assets (HTML, CSS, JS).
