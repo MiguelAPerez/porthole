@@ -2,3 +2,6 @@
 projects.json
 config.json
 node_modules/
+docs/plans/
+docs/specs/
+docs/superpowers/
