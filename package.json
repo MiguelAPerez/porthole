@@ -12,7 +12,9 @@
   "scripts": {
     "start": "node server.js",
     "gen": "node generate-projects.js",
-    "view": "open http://localhost:3131"
+    "view": "open http://localhost:3131",
+    "setup": "node setup.js",
+    "postinstall": "node setup.js --if-missing"
   },
   "author": "Miguel Perez",
   "license": "MIT"
