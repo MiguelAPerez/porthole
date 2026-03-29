@@ -72,7 +72,6 @@ function renderCharts(projects) {
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            aspectRatio: 1.5,
             plugins: {
                 legend: { 
                     position: 'right', 
@@ -148,7 +147,7 @@ function renderCharts(projects) {
             },
             plugins: { legend: { display: false } },
             layout: {
-                padding: { bottom: 10 }
+                padding: { top: 10, bottom: 20, left: 10, right: 10 }
             }
         }
     });
@@ -225,9 +224,12 @@ function renderAIChart(projects) {
             plugins: {
                 legend: {
                     display: true,
-                    position: 'bottom',
+                    position: 'top', /* Changed from bottom */
                     labels: { color: '#8b949e', font: { size: 9 }, usePointStyle: true }
                 }
+            },
+            layout: {
+                padding: { top: 10, bottom: 20, left: 10, right: 10 }
             }
         }
     });
@@ -266,7 +268,7 @@ function renderAISplitChart(projects) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
             plugins: {
                 legend: {
                     position: 'right',
@@ -286,10 +288,12 @@ function renderTokenChart(projects) {
     const topTokenProjects = [...projects]
         .map(p => ({
             name: p.name,
-            tokens: (p.claudeInputTokens || 0) + (p.claudeOutputTokens || 0)
+            claude: (p.claudeInputTokens || 0) + (p.claudeOutputTokens || 0),
+            ag: p.antigravityTokens || 0,
+            total: ((p.claudeInputTokens || 0) + (p.claudeOutputTokens || 0)) + (p.antigravityTokens || 0)
         }))
-        .filter(p => p.tokens > 0)
-        .sort((a,b) => b.tokens - a.tokens)
+        .filter(p => p.total > 0)
+        .sort((a,b) => b.total - a.total)
         .slice(0, 7);
 
     if (window.myTokenChart instanceof Chart) {
@@ -302,24 +306,32 @@ function renderTokenChart(projects) {
         type: 'bar',
         data: {
             labels: topTokenProjects.map(p => p.name.length > 12 ? p.name.slice(0, 10) + '...' : p.name),
-            datasets: [{
-                label: 'Total Tokens',
-                data: topTokenProjects.map(p => p.tokens),
-                backgroundColor: 'rgba(210, 153, 34, 0.6)',
-                borderColor: '#d29922',
-                borderWidth: 1,
-                borderRadius: 4
-            }]
+            datasets: [
+                {
+                    label: 'Antigravity',
+                    data: topTokenProjects.map(p => p.ag),
+                    backgroundColor: 'rgba(171, 125, 248, 0.6)',
+                    borderColor: '#ab7df8',
+                    borderWidth: 1,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Claude CLI',
+                    data: topTokenProjects.map(p => p.claude),
+                    backgroundColor: 'rgba(210, 153, 34, 0.6)',
+                    borderColor: '#d29922',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             indexAxis: 'y',
-            plugins: {
-                legend: { display: false }
-            },
             scales: {
                 x: {
+                    stacked: true,
                     grid: { color: 'rgba(255,255,255,0.05)' },
                     ticks: {
                         color: '#8b949e',
@@ -328,9 +340,20 @@ function renderTokenChart(projects) {
                     }
                 },
                 y: {
+                    stacked: true,
                     grid: { display: false },
                     ticks: { color: '#8b949e', font: { size: 10 } }
                 }
+            },
+            plugins: {
+                legend: { 
+                    display: true, 
+                    position: 'bottom', 
+                    labels: { color: '#8b949e', font: { size: 9 }, usePointStyle: true } 
+                }
+            },
+            layout: {
+                padding: { top: 10, bottom: 20, left: 10, right: 10 }
             }
         }
     });
@@ -370,10 +393,10 @@ function renderCacheChart(projects) {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
             plugins: {
                 legend: {
-                    position: 'bottom',
+                    position: 'top', /* Changed from bottom */
                     labels: { color: '#8b949e', font: { size: 10 }, usePointStyle: true }
                 },
                 tooltip: {
@@ -381,6 +404,9 @@ function renderCacheChart(projects) {
                         label: (ctx) => `${ctx.label}: ${formatNumber(ctx.raw)} (${Math.round(ctx.raw/totalInteractive*100)}%)`
                     }
                 }
+            },
+            layout: {
+                padding: { top: 10, bottom: 20, left: 10, right: 10 }
             },
             cutout: '70%'
         }
@@ -408,6 +434,7 @@ function renderSummary() {
   let gitRepos = 0;
   
   let totalAgSessions = 0;
+  let totalAgTokens = 0;
   let totalClaudeSessions = 0;
   let totalClaudeTokens = 0;
 
@@ -422,6 +449,7 @@ function renderSummary() {
     }
     
     totalAgSessions += (p.antigravityUsage || 0);
+    totalAgTokens += (p.antigravityTokens || 0);
     totalClaudeSessions += (p.claudeSessions || 0);
     totalClaudeTokens += (p.claudeInputTokens || 0) + (p.claudeOutputTokens || 0);
   });
@@ -434,6 +462,7 @@ function renderSummary() {
   document.getElementById('gitHealth').textContent = `${gitHealth}%`;
   
   document.getElementById('agSessions').textContent = totalAgSessions;
+  document.getElementById('agTokens').textContent = `${formatNumber(totalAgTokens)} tokens`;
   document.getElementById('claudeSessions').textContent = totalClaudeSessions;
   document.getElementById('claudeTokens').textContent = `${formatNumber(totalClaudeTokens)} tokens`;
 
@@ -542,7 +571,10 @@ function renderSummary() {
                 ${p.antigravityUsage > 0 ? `
                   <div class="ai-badge antigravity" title="Antigravity sessions">
                     <span>🪐</span>
-                    <span>${p.antigravityUsage}</span>
+                    <div class="ag-info">
+                      <span class="count">${p.antigravityUsage}</span>
+                      <span class="tokens">${formatNumber(p.antigravityTokens || 0)}</span>
+                    </div>
                   </div>
                 ` : ''}
                 ${p.claudeSessions > 0 ? `

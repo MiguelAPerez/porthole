@@ -7,7 +7,7 @@
 }
 
 .dashboard-container {
-  max-width: 1400px;
+  max-width: 1600px; /* Increased to allow wider cards */
   margin: 0 auto;
 }
 
@@ -92,7 +92,7 @@
 /* Charts Section */
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(3, 1fr); /* Strictly 3 per row max */
   gap: 1.5rem;
   margin-bottom: 3rem;
 }
@@ -101,12 +101,18 @@
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 1.25rem; 
-  height: 460px; 
+  padding: 1.5rem; 
+  height: 550px; /* Increased to 550px for perfect information density */
   display: flex;
   flex-direction: column;
-  overflow: visible; /* Changed from hidden to show tooltips */
+  overflow: visible; 
   position: relative;
+}
+
+.chart-container canvas {
+  flex: 1; /* Force canvas to fill available space */
+  min-height: 0; /* Allow the flex item to shrink properly */
+  width: 100% !important;
 }
 
 .chart-container h3 {
@@ -376,6 +382,19 @@
     padding-left: 0.4rem;
 }
 
+.ag-info {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ag-info .tokens {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    border-left: 1px solid rgba(171, 125, 248, 0.3);
+    padding-left: 0.4rem;
+}
+
 .header-metric {
     display: flex;
     flex-direction: column;
@@ -402,9 +421,13 @@
     color: var(--accent);
 }
 
-@media (max-width: 768px) {
-  .charts-grid { grid-template-columns: 1fr; }
+@media (max-width: 1200px) {
+  .charts-grid { grid-template-columns: repeat(2, 1fr); }
   .dashboard-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 800px) {
+  .charts-grid { grid-template-columns: 1fr; }
 }
 
 
