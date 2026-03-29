@@ -13,7 +13,7 @@
 
 .metrics-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
 }
@@ -51,7 +51,7 @@
 /* Charts Section */
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.5rem;
   margin-bottom: 3rem;
 }
@@ -291,35 +291,78 @@
   color: var(--muted);
 }
 
-.hidden { display: none !important; }
-
-.pulse-item {
+.ai-usage-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 2px 0;
-}
-
-.pulse-label {
-    display: flex;
-    align-items: center;
     gap: 0.75rem;
-    color: var(--muted);
-    font-size: 0.9rem;
+    margin-top: -0.25rem;
 }
 
-.pulse-icon {
-    width: 20px;
-    display: inline-flex;
+.ai-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+}
+
+.ai-badge.antigravity {
+    background: rgba(171, 125, 248, 0.08);
+    color: #ab7df8;
+    border-color: rgba(171, 125, 248, 0.2);
+}
+
+.ai-badge.claude {
+    background: rgba(210, 153, 34, 0.08); /* Warm-ish orange */
+    color: #d29922;
+    border-color: rgba(210, 153, 34, 0.2);
+}
+
+.claude-info {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.claude-info .tokens {
+    font-size: 0.7rem;
+    opacity: 0.6;
+    border-left: 1px solid rgba(210, 153, 34, 0.3);
+    padding-left: 0.4rem;
+}
+
+.header-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
+    padding: 1rem;
+    background: var(--card-gradient);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    min-width: 140px;
 }
 
-.pulse-value {
-    font-weight: 700;
-    color: var(--text);
+.header-metric .label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.header-metric .value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--accent);
 }
 
 @media (max-width: 768px) {
   .charts-grid { grid-template-columns: 1fr; }
   .dashboard-grid { grid-template-columns: 1fr; }
 }
+

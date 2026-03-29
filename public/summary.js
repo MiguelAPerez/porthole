@@ -154,6 +154,245 @@ function renderCharts(projects) {
     });
 }
 
+function renderAIChart(projects) {
+    const canvas = document.getElementById('aiChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // Get top projects by total AI interaction (sessions/tasks)
+    const topProjects = [...projects]
+        .map(p => ({
+            name: p.name,
+            ag: p.antigravityUsage || 0,
+            claude: p.claudeSessions || 0,
+            total: (p.antigravityUsage || 0) + (p.claudeSessions || 0)
+        }))
+        .filter(p => p.total > 0)
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 7);
+
+    if (window.myAIChart instanceof Chart) {
+        window.myAIChart.destroy();
+    }
+
+    if (topProjects.length === 0) {
+        ctx.fillStyle = '#8b949e';
+        ctx.textAlign = 'center';
+        ctx.fillText('No AI activity recorded yet', canvas.width/2, canvas.height/2);
+        return;
+    }
+
+    window.myAIChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: topProjects.map(p => p.name.length > 12 ? p.name.slice(0, 10) + '...' : p.name),
+            datasets: [
+                {
+                    label: 'Antigravity',
+                    data: topProjects.map(p => p.ag),
+                    backgroundColor: 'rgba(171, 125, 248, 0.6)',
+                    borderColor: '#ab7df8',
+                    borderWidth: 1,
+                    borderRadius: 4
+                },
+                {
+                    label: 'Claude CLI',
+                    data: topProjects.map(p => p.claude),
+                    backgroundColor: 'rgba(210, 153, 34, 0.6)',
+                    borderColor: '#d29922',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y', // Horizontal bar chart
+            scales: {
+                x: {
+                    stacked: true,
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#8b949e', font: { size: 10 } }
+                },
+                y: {
+                    stacked: true,
+                    grid: { display: false },
+                    ticks: { color: '#8b949e', font: { size: 10 } }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: { color: '#8b949e', font: { size: 9 }, usePointStyle: true }
+                }
+            }
+        }
+    });
+}
+
+function renderAISplitChart(projects) {
+    const canvas = document.getElementById('aiSplitChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    let totalAg = 0;
+    let totalClaude = 0;
+
+    projects.forEach(p => {
+        totalAg += (p.antigravityUsage || 0);
+        totalClaude += (p.claudeSessions || 0);
+    });
+
+    if (window.myAISplitChart instanceof Chart) {
+        window.myAISplitChart.destroy();
+    }
+
+    if (totalAg === 0 && totalClaude === 0) return;
+
+    window.myAISplitChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Antigravity', 'Claude CLI'],
+            datasets: [{
+                data: [totalAg, totalClaude],
+                backgroundColor: ['rgba(171, 125, 248, 0.7)', 'rgba(210, 153, 34, 0.7)'],
+                borderColor: '#0d1117',
+                borderWidth: 2,
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { color: '#8b949e', font: { size: 10 }, usePointStyle: true }
+                }
+            },
+            cutout: '65%'
+        }
+    });
+}
+
+function renderTokenChart(projects) {
+    const canvas = document.getElementById('tokenChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const topTokenProjects = [...projects]
+        .map(p => ({
+            name: p.name,
+            tokens: (p.claudeInputTokens || 0) + (p.claudeOutputTokens || 0)
+        }))
+        .filter(p => p.tokens > 0)
+        .sort((a,b) => b.tokens - a.tokens)
+        .slice(0, 7);
+
+    if (window.myTokenChart instanceof Chart) {
+        window.myTokenChart.destroy();
+    }
+
+    if (topTokenProjects.length === 0) return;
+
+    window.myTokenChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: topTokenProjects.map(p => p.name.length > 12 ? p.name.slice(0, 10) + '...' : p.name),
+            datasets: [{
+                label: 'Total Tokens',
+                data: topTokenProjects.map(p => p.tokens),
+                backgroundColor: 'rgba(210, 153, 34, 0.6)',
+                borderColor: '#d29922',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: {
+                        color: '#8b949e',
+                        font: { size: 10 },
+                        callback: val => formatNumber(val)
+                    }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: '#8b949e', font: { size: 10 } }
+                }
+            }
+        }
+    });
+}
+
+function renderCacheChart(projects) {
+    const canvas = document.getElementById('cacheChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    let totalTokens = 0;
+    let totalCacheRead = 0;
+
+    projects.forEach(p => {
+        totalTokens += (p.claudeInputTokens || 0) + (p.claudeOutputTokens || 0);
+        totalCacheRead += (p.claudeCacheHits || 0);
+    });
+
+    if (window.myCacheChart instanceof Chart) {
+        window.myCacheChart.destroy();
+    }
+
+    const totalInteractive = totalTokens + totalCacheRead;
+    if (totalInteractive === 0) return;
+
+    window.myCacheChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Direct Tokens', 'Cached Hits'],
+            datasets: [{
+                data: [totalTokens, totalCacheRead],
+                backgroundColor: ['rgba(210, 153, 34, 0.7)', 'rgba(63, 185, 80, 0.7)'],
+                borderColor: '#0d1117',
+                borderWidth: 2,
+                hoverOffset: 12
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#8b949e', font: { size: 10 }, usePointStyle: true }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `${ctx.label}: ${formatNumber(ctx.raw)} (${Math.round(ctx.raw/totalInteractive*100)}%)`
+                    }
+                }
+            },
+            cutout: '70%'
+        }
+    });
+}
+
+function formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+    return num;
+}
+
 function renderSummary() {
   const loadingEl = document.getElementById('loading');
   const dashboardContent = document.getElementById('dashboardContent');
@@ -167,6 +406,11 @@ function renderSummary() {
   let recentPulseCount = 0;
   let cleanRepos = 0;
   let gitRepos = 0;
+  
+  let totalAgSessions = 0;
+  let totalClaudeSessions = 0;
+  let totalClaudeTokens = 0;
+
   const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
 
   projects.forEach(p => {
@@ -176,6 +420,10 @@ function renderSummary() {
         gitRepos++;
         if (!p.git.isDirty) cleanRepos++;
     }
+    
+    totalAgSessions += (p.antigravityUsage || 0);
+    totalClaudeSessions += (p.claudeSessions || 0);
+    totalClaudeTokens += (p.claudeInputTokens || 0) + (p.claudeOutputTokens || 0);
   });
 
   const gitHealth = gitRepos > 0 ? Math.round((cleanRepos / gitRepos) * 100) : 100;
@@ -184,9 +432,17 @@ function renderSummary() {
   document.getElementById('activeStacks').textContent = Object.keys(techCounts).length;
   document.getElementById('recentPulse').textContent = recentPulseCount;
   document.getElementById('gitHealth').textContent = `${gitHealth}%`;
+  
+  document.getElementById('agSessions').textContent = totalAgSessions;
+  document.getElementById('claudeSessions').textContent = totalClaudeSessions;
+  document.getElementById('claudeTokens').textContent = `${formatNumber(totalClaudeTokens)} tokens`;
 
   // Charts
   renderCharts(projects);
+  renderAIChart(projects);
+  renderAISplitChart(projects);
+  renderTokenChart(projects);
+  renderCacheChart(projects);
 
   // Recent Activity
   const recentProjects = [...projects].sort((a,b) => b.lastModified - a.lastModified).slice(0, 5);
@@ -255,6 +511,8 @@ function renderSummary() {
 
     for (const p of techProjects) {
       const escapedPath = p.path.replace(/'/g, "\\'");
+      const totalTokens = (p.claudeInputTokens || 0) + (p.claudeOutputTokens || 0);
+      
       explorerHtml += `
           <div class="project-card" style="border-top: 3px solid ${p.color}">
             <div class="top-row">
@@ -278,6 +536,24 @@ function renderSummary() {
                 ${p.indicators?.isDocker ? '<span class="badge docker">Docker</span>' : ''}
                 ${p.indicators?.isTS ? '<span class="badge ts">TS</span>' : ''}
                 <span class="badge">${timeAgo(new Date(p.lastModified))}</span>
+            </div>
+            
+            <div class="ai-usage-row">
+                ${p.antigravityUsage > 0 ? `
+                  <div class="ai-badge antigravity" title="Antigravity sessions">
+                    <span>🪐</span>
+                    <span>${p.antigravityUsage}</span>
+                  </div>
+                ` : ''}
+                ${p.claudeSessions > 0 ? `
+                  <div class="ai-badge claude" title="Claude CLI sessions">
+                    <span>🤖</span>
+                    <div class="claude-info">
+                      <span class="count">${p.claudeSessions}</span>
+                      <span class="tokens">${formatNumber(totalTokens)}</span>
+                    </div>
+                  </div>
+                ` : ''}
             </div>
 
             <div class="project-actions">

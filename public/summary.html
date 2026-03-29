@@ -32,11 +32,22 @@
           <div class="value" id="recentPulse">0</div>
           <div class="label">Updated (7d)</div>
         </div>
-        <div class="metric-card">
-            <div class="value" id="gitHealth">0%</div>
-            <div class="label">Git Health</div>
+            <div class="header-metric">
+                <span class="label">Git Health</span>
+                <span class="value" id="gitHealth">--</span>
+            </div>
+            <div class="header-metric">
+                <span class="label">🪐 Antigravity</span>
+                <span class="value" id="agSessions">--</span>
+            </div>
+            <div class="header-metric">
+                <span class="label">🤖 Claude CLI</span>
+                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                    <span class="value" id="claudeSessions">--</span>
+                    <span id="claudeTokens" style="font-size: 0.7rem; color: var(--muted); margin-top: -2px;">0 tokens</span>
+                </div>
+            </div>
         </div>
-      </div>
 
       <!-- Charts Section -->
       <div class="charts-grid">
@@ -45,8 +56,24 @@
             <canvas id="techChart"></canvas>
         </div>
         <div class="chart-container">
+            <h3><span class="icon">🎯</span> Global AI Split</h3>
+            <canvas id="aiSplitChart"></canvas>
+        </div>
+        <div class="chart-container">
             <h3><span class="icon">📉</span> Activity Pulse</h3>
             <canvas id="activityChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3><span class="icon">🤖</span> AI Engagement</h3>
+            <canvas id="aiChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3><span class="icon">🪙</span> Token Consumption</h3>
+            <canvas id="tokenChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3><span class="icon">⚡</span> Cache Performance</h3>
+            <canvas id="cacheChart"></canvas>
         </div>
       </div>
 
