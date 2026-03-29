@@ -9,14 +9,17 @@ A local dashboard to view and manage your development projects. Scans a specifie
 - Presents a searchable, filterable dashboard of your projects.
 - Displays summary statistics of your tech stacks.
 - Configurable via a web UI.
-- Synchronizes project metadata with a Locus instance.
-- Track Claude and Antigravity usage across projects
+- Synchronizes project metadata with a [Locus](https://github.com/MiguelAPerez/locus) instance.
+- Track Claude and Antigravity usage across projects.
 
 ## Installation
 
 ```bash
 npm install
+npm run setup
 ```
+
+The setup script will guide you through configuring your projects directory and Locus synchronization.
 
 ## Usage
 
@@ -28,9 +31,21 @@ npm start
 
 1. Open `http://localhost:3131` in your browser.
 
-2. Use the Settings icon in the UI to configure your development directory (`DEV_DIR`) and Locus synchronization settings.
+2. Access the **Settings** icon (⚙️) from the dashboard to manage your `DEV_DIR` and Locus settings.
 
-3. Click the Refresh button in the UI to generate the initial index of your projects.
+3. Click the **Refresh** button (↻) to scan your projects and generate the data.
+
+## Configuration
+
+The application uses a `config.json` file as the single source of truth for your configuration. You can modify this file directly or use the built-in setup:
+
+- **DEV_DIR**: The absolute path to your local development projects.
+- **LOCUS_URL**: The URL to your Locus instance for metadata synchronization.
+- **LOCUS_SPACE**: The Locus space identifier for your projects.
+
+### Using Locus
+
+[Locus](https://github.com/MiguelAPerez/locus) is used to track and synchronize project metadata. To enable this, ensure your Locus server is running and configured correctly in your `config.json`.
 
 ## Global Installation (Optional)
 
