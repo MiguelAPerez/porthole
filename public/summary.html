@@ -11,8 +11,15 @@
 <body>
   <div class="dashboard-container">
     <div class="header">
-      <h1><span class="icon">📊</span> Projects Dashboard</h1>
-      <p>System overview and visual analytics</p>
+      <div class="header-main">
+        <h1><span class="icon">📊</span> Projects Dashboard</h1>
+        <p>System overview and visual analytics</p>
+      </div>
+      <div class="header-actions">
+        <a href="index.html" class="action-btn-primary">
+          🔍 Search All Projects
+        </a>
+      </div>
     </div>
 
     <div id="loading">✨ Analyzing projects and Git repositories...</div>
@@ -52,27 +59,27 @@
       <!-- Charts Section -->
       <div class="charts-grid">
         <div class="chart-container">
-            <h3><span class="icon">🥧</span> Tech Distribution</h3>
+            <h3 class="tooltip-trigger" data-tooltip="Distribution of projects by their primary coding language or framework"><span class="icon">🥧</span> Tech Distribution</h3>
             <canvas id="techChart"></canvas>
         </div>
         <div class="chart-container">
-            <h3><span class="icon">🎯</span> Global AI Split</h3>
+            <h3 class="tooltip-trigger" data-tooltip="Comparison of user-initiated tasks (Antigravity) vs automated CLI sessions (Claude)"><span class="icon">🎯</span> Global AI Split</h3>
             <canvas id="aiSplitChart"></canvas>
         </div>
         <div class="chart-container">
-            <h3><span class="icon">📉</span> Activity Pulse</h3>
+            <h3 class="tooltip-trigger" data-tooltip="Daily project activity and commit frequency over the last 14 days"><span class="icon">📉</span> Activity Pulse</h3>
             <canvas id="activityChart"></canvas>
         </div>
         <div class="chart-container">
-            <h3><span class="icon">🤖</span> AI Engagement</h3>
+            <h3 class="tooltip-trigger" data-tooltip="Projects with the highest volume of AI-assisted development sessions"><span class="icon">🤖</span> AI Engagement</h3>
             <canvas id="aiChart"></canvas>
         </div>
         <div class="chart-container">
-            <h3><span class="icon">🪙</span> Token Consumption</h3>
+            <h3 class="tooltip-trigger" data-tooltip="Cumulative token usage across input systems and model responses"><span class="icon">🪙</span> Token Consumption</h3>
             <canvas id="tokenChart"></canvas>
         </div>
         <div class="chart-container">
-            <h3><span class="icon">⚡</span> Cache Performance</h3>
+            <h3 class="tooltip-trigger" data-tooltip="Percentage of interactions served by Claude's context cache features"><span class="icon">⚡</span> Cache Performance</h3>
             <canvas id="cacheChart"></canvas>
         </div>
       </div>
@@ -105,8 +112,6 @@
       </div>
     </div>
 
-    <div class="nav-links">
-      <a href="index.html">🔍 Search All Projects</a>
     </div>
   </div>
 
