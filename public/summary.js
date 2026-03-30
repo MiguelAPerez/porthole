@@ -15,7 +15,6 @@ async function init() {
     renderSummary();
   } catch (err) {
     console.error('Failed to load projects:', err);
-    document.getElementById('loading').innerHTML = '❌ Failed to load dashboard. Ensure the server is running.';
   }
 }
 
@@ -420,10 +419,7 @@ function formatNumber(num) {
 }
 
 function renderSummary() {
-  const loadingEl = document.getElementById('loading');
   const dashboardContent = document.getElementById('dashboardContent');
-  
-  loadingEl.classList.add('hidden');
   dashboardContent.classList.remove('hidden');
 
   // Metrics
