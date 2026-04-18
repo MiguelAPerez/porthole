@@ -17,23 +17,23 @@ A local dashboard to view and manage your development projects. Scans a specifie
 ```bash
 npm install
 npm run setup
+npm link
 ```
 
-The setup script will guide you through configuring your projects directory and Locus synchronization.
+The setup script will guide you through configuring your projects directory and Locus synchronization. `npm link` installs the global `pview` command so you can launch the dashboard from anywhere.
 
 ## Usage
 
-1. Start the server (this will also open the dashboard in your browser):
-
 ```bash
-npm start
+pview
 ```
 
-1. Open `http://localhost:3131` in your browser.
+Opens the dashboard at `http://localhost:3131`. If the server is already running, it prints the URL instead of starting a new instance.
 
-2. Access the **Settings** icon (⚙️) from the dashboard to manage your `DEV_DIR` and Locus settings.
+From the dashboard:
 
-3. Click the **Refresh** button (↻) to scan your projects and generate the data.
+- Access the **Settings** icon (⚙️) to manage your `DEV_DIR` and Locus settings.
+- Click the **Refresh** button (↻) to rescan your projects.
 
 ## Configuration
 
@@ -75,16 +75,6 @@ The dashboard merges Claude sessions, Antigravity sessions, and git commits into
 - **Commits** — shown separately in the grid
 
 Usage metrics appear on project cards and in the Summary page (top projects by sessions/tokens, consumption charts).
-
-## Global Installation (Optional)
-
-To use `pview` from anywhere on your system:
-
-```bash
-npm link
-```
-
-This creates a global `pview` command that you can use to start the server or generate projects from any directory.
 
 ## Notes
 
