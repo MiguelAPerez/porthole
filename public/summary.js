@@ -1,4 +1,5 @@
 let projects = [];
+let activityData = {};
 
 function sanitize(str) {
   if (!str) return '';
@@ -9,12 +10,16 @@ function sanitize(str) {
 
 async function init() {
   try {
-    const res = await fetch('/projects.json');
-    if (!res.ok) throw new Error('Data not found');
-    projects = await res.json();
+    const [projRes, actRes] = await Promise.all([
+      fetch('/projects.json'),
+      fetch('/activity.json')
+    ]);
+    if (!projRes.ok) throw new Error('Projects data not found');
+    projects = await projRes.json();
+    if (actRes.ok) activityData = await actRes.json();
     renderSummary();
   } catch (err) {
-    console.error('Failed to load projects:', err);
+    console.error('Failed to load data:', err);
   }
 }
 
@@ -418,6 +423,116 @@ function formatNumber(num) {
     return num;
 }
 
+function renderActivityGrid(activity) {
+  const container = document.getElementById('activityGridContainer');
+  if (!container) return;
+
+  const WEEKS = 26;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Align to the most recent Sunday
+  const startDate = new Date(today);
+  startDate.setDate(startDate.getDate() - startDate.getDay() - (WEEKS - 1) * 7);
+
+  // Find max total for intensity scaling
+  let maxTotal = 1;
+  for (const d of Object.values(activity)) {
+    const t = (d.claude || 0) + (d.antigravity || 0) + (d.commits || 0);
+    if (t > maxTotal) maxTotal = t;
+  }
+
+  const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  // Build month labels spanning across week columns
+  const monthLabels = [];
+  let lastMonth = -1;
+  for (let w = 0; w < WEEKS; w++) {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + w * 7);
+    if (d.getMonth() !== lastMonth) {
+      monthLabels.push({ col: w + 1, label: d.toLocaleString('default', { month: 'short' }) });
+      lastMonth = d.getMonth();
+    }
+  }
+
+  let html = `<div class="ag-grid-wrap">
+    <div class="ag-month-row">
+      <div class="ag-day-labels"></div>`;
+  for (const { col, label } of monthLabels) {
+    html += `<span class="ag-month-label" style="grid-column:${col}">${label}</span>`;
+  }
+  html += `</div><div class="ag-grid-body"><div class="ag-day-labels">`;
+  for (let d = 0; d < 7; d++) {
+    html += `<span class="ag-day-label">${d % 2 === 1 ? DAYS[d] : ''}</span>`;
+  }
+  html += `</div>`;
+
+  for (let w = 0; w < WEEKS; w++) {
+    html += `<div class="ag-week">`;
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(startDate);
+      date.setDate(date.getDate() + w * 7 + d);
+      const key = date.toISOString().slice(0, 10);
+      const entry = activity[key] || { claude: 0, antigravity: 0 };
+      const total = (entry.claude || 0) + (entry.antigravity || 0) + (entry.commits || 0);
+      const level = total === 0 ? 0 : Math.ceil((total / maxTotal) * 4);
+      const isFuture = date > today;
+      html += `<div class="ag-cell level-${isFuture ? 'future' : level}" data-date="${key}" data-claude="${entry.claude}" data-ag="${entry.antigravity}" data-commits="${entry.commits || 0}"></div>`;
+    }
+    html += `</div>`;
+  }
+
+  html += `</div>`;
+
+  // Legend
+  html += `<div class="ag-legend">
+    <span class="ag-legend-label">Less</span>
+    ${[0,1,2,3,4].map(l => `<div class="ag-cell level-${l}"></div>`).join('')}
+    <span class="ag-legend-label">More</span>
+    <span class="ag-legend-sep">·</span>
+    <div class="ag-cell level-1" style="background:var(--ag-claude)"></div><span class="ag-legend-label">Claude</span>
+    <div class="ag-cell level-1" style="background:var(--ag-antigravity)"></div><span class="ag-legend-label">Antigravity</span>
+  </div>`;
+
+  html += `</div>`;
+  container.innerHTML = html;
+
+  // Floating tooltip
+  const tip = document.createElement('div');
+  tip.className = 'ag-tooltip';
+  document.body.appendChild(tip);
+
+  container.querySelectorAll('.ag-cell[data-date]').forEach(cell => {
+    cell.addEventListener('mouseenter', e => {
+      const date = cell.dataset.date;
+      const claude = parseInt(cell.dataset.claude) || 0;
+      const ag = parseInt(cell.dataset.ag) || 0;
+      const commits = parseInt(cell.dataset.commits) || 0;
+      const total = claude + ag;
+      const d = new Date(date + 'T12:00:00');
+      const label = d.toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+      const hasAny = total > 0 || commits > 0;
+      tip.innerHTML = `
+        <div class="ag-tip-date">${label}</div>
+        ${!hasAny ? '<div class="ag-tip-empty">No activity</div>' : `
+          ${claude > 0 ? `<div class="ag-tip-row"><span class="ag-tip-dot claude"></span> ${claude} Claude session${claude !== 1 ? 's' : ''}</div>` : ''}
+          ${ag > 0 ? `<div class="ag-tip-row"><span class="ag-tip-dot ag"></span> ${ag} Antigravity task${ag !== 1 ? 's' : ''}</div>` : ''}
+          ${commits > 0 ? `<div class="ag-tip-row"><span class="ag-tip-dot commits"></span> ${commits} commit${commits !== 1 ? 's' : ''}</div>` : ''}
+        `}
+      `;
+      tip.classList.add('visible');
+    });
+    cell.addEventListener('mousemove', e => {
+      const x = e.clientX + 12;
+      const y = e.clientY - 10;
+      tip.style.left = Math.min(x, window.innerWidth - tip.offsetWidth - 16) + 'px';
+      tip.style.top = (y < 0 ? e.clientY + 16 : y) + 'px';
+    });
+    cell.addEventListener('mouseleave', () => tip.classList.remove('visible'));
+  });
+}
+
 function renderSummary() {
   const dashboardContent = document.getElementById('dashboardContent');
   dashboardContent.classList.remove('hidden');
@@ -461,6 +576,9 @@ function renderSummary() {
   document.getElementById('agTokens').textContent = `${formatNumber(totalAgTokens)} tokens`;
   document.getElementById('claudeSessions').textContent = totalClaudeSessions;
   document.getElementById('claudeTokens').textContent = `${formatNumber(totalClaudeTokens)} tokens`;
+
+  // Activity Grid
+  renderActivityGrid(activityData);
 
   // Charts
   renderCharts(projects);

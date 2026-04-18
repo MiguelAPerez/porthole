@@ -129,13 +129,13 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Serve projects.json from root explicitly
-  if (req.url === '/projects.json' && req.method === 'GET') {
-      const projectsPath = path.join(DIR, 'projects.json');
+  // Serve JSON data files from root
+  if ((req.url === '/projects.json' || req.url === '/activity.json') && req.method === 'GET') {
+      const dataPath = path.join(DIR, req.url);
       try {
-          if (fs.existsSync(projectsPath)) {
+          if (fs.existsSync(dataPath)) {
               res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(fs.readFileSync(projectsPath));
+              res.end(fs.readFileSync(dataPath));
           } else {
               res.writeHead(404);
               res.end('Not found');

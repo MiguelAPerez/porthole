@@ -12,6 +12,7 @@ const os = require('os');
 
 const CONFIG_PATH = path.join(__dirname, 'config.json');
 const PROJECTS_PATH = path.join(__dirname, 'projects.json');
+const ACTIVITY_PATH = path.join(__dirname, 'activity.json');
 const CACHE_PATH = path.join(__dirname, '.locus-cache.json');
 
 let config = {
@@ -42,12 +43,15 @@ try {
 
 async function main() {
   console.log(`Scanning projects in ${config.DEV_DIR}...`);
-  const projects = scanProjects(config.DEV_DIR);
-  
+  const { projects, dailyActivity } = scanProjects(config.DEV_DIR);
+
   console.log(`Found ${projects.length} projects.`);
-  
+
   fs.writeFileSync(PROJECTS_PATH, JSON.stringify(projects, null, 2), 'utf8');
   console.log(`Saved to ${PROJECTS_PATH}`);
+
+  fs.writeFileSync(ACTIVITY_PATH, JSON.stringify(dailyActivity, null, 2), 'utf8');
+  console.log(`Saved to ${ACTIVITY_PATH}`);
 
   if (config.LOCUS_URL) {
     console.log(`Syncing to Locus at ${config.LOCUS_URL}...`);
