@@ -47,6 +47,35 @@ The application uses a `config.json` file as the single source of truth for your
 
 [Locus](https://github.com/MiguelAPerez/locus) is used to track and synchronize project metadata. To enable this, ensure your Locus server is running and configured correctly in your `config.json`.
 
+## AI Usage Tracking
+
+The dashboard tracks how much you use **Claude Code** and **Antigravity** (Gemini) across your projects, automatically — no manual logging needed.
+
+### Claude Code
+
+Reads session files from `~/.claude/projects/`. For each project it extracts:
+
+- **Sessions** — number of `.jsonl` session files
+- **Input / output tokens** — summed from `assistant` message usage entries
+- **Cache hits** — `cache_read_input_tokens` across all sessions
+
+### Antigravity (Gemini)
+
+Reads from `~/.gemini/antigravity/brain/` and `~/.gemini/antigravity/conversations/`. For each session folder it extracts:
+
+- **Sessions** — one per brain folder; project is identified by `file://` URLs found in `task.md` or `implementation_plan.md`
+- **Token estimate** — derived from the size of the matching `.pb` conversation file (`bytes ÷ 4`)
+
+### Daily Activity Grid
+
+The dashboard merges Claude sessions, Antigravity sessions, and git commits into a heatmap grid. Each day shows activity counts for all three sources, color-coded:
+
+- **Claude** — orange (`#d29922`)
+- **Antigravity** — purple (`#ab7df8`)
+- **Commits** — shown separately in the grid
+
+Usage metrics appear on project cards and in the Summary page (top projects by sessions/tokens, consumption charts).
+
 ## Global Installation (Optional)
 
 To use `pview` from anywhere on your system:

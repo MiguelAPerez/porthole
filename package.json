@@ -14,7 +14,8 @@
     "gen": "node generate-projects.js",
     "view": "open http://localhost:3131",
     "setup": "node setup.js",
-    "postinstall": "node setup.js --if-missing"
+    "postinstall": "node setup.js --if-missing",
+    "test": "node --test tests/**/*.test.js"
   },
   "author": "Miguel Perez",
   "license": "MIT"
