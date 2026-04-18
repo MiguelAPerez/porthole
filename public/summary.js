@@ -735,3 +735,29 @@ window.openProjectPath = async function(event, path, action) {
 }
 
 init();
+
+document.getElementById('refresh').addEventListener('click', async () => {
+  const btn = document.getElementById('refresh');
+  btn.textContent = '⏳';
+  try {
+    const res = await fetch('/refresh');
+    if (res.ok) {
+      btn.textContent = '✓';
+      await init();
+      setTimeout(() => { btn.innerHTML = '&#x21BB;'; }, 2000);
+    } else {
+      btn.textContent = '✗';
+      setTimeout(() => { btn.innerHTML = '&#x21BB;'; }, 2000);
+    }
+  } catch {
+    btn.textContent = '✗';
+    setTimeout(() => { btn.innerHTML = '&#x21BB;'; }, 2000);
+  }
+});
+
+setInterval(async () => {
+  try {
+    const res = await fetch('/refresh');
+    if (res.ok) await init();
+  } catch {}
+}, 300000);

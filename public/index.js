@@ -318,3 +318,10 @@ window.copyToClipboard = async function(event, text) {
 }
 
 init();
+
+setInterval(async () => {
+  try {
+    const res = await fetch('/refresh');
+    if (res.ok) await loadProjects();
+  } catch {}
+}, 300000);

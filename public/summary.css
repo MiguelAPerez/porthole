@@ -6,6 +6,20 @@
   --danger: #f85149;
 }
 
+.refresh-btn {
+  padding: 0.65rem 0.875rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
 .dashboard-container {
   max-width: 1600px; /* Increased to allow wider cards */
   margin: 0 auto;
