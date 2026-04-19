@@ -55,7 +55,7 @@ async function main() {
 
   if (config.LOCUS_URL) {
     console.log(`Syncing to Locus at ${config.LOCUS_URL}...`);
-    await syncToLocus(projects, config.LOCUS_URL, config.LOCUS_SPACE, CACHE_PATH);
+    await syncToLocus(projects, config.LOCUS_URL, config.LOCUS_SPACE, CACHE_PATH, config.LOCUS_API_KEY || '');
   }
 }
 

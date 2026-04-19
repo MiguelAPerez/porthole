@@ -36,7 +36,7 @@ const MIME = {
   '.json': 'application/json'
 };
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -44,6 +44,78 @@ const server = http.createServer((req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(200);
     res.end();
+    return;
+  }
+
+  if (req.url.startsWith('/search') && req.method === 'GET') {
+    const params = new URL(req.url, 'http://localhost').searchParams;
+    const q = params.get('q') || '';
+    const mode = params.get('mode') || 'natural';
+    if (!q) { res.writeHead(400); res.end('q required'); return; }
+
+    let config = {};
+    try { if (fs.existsSync(CONFIG_PATH)) config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); } catch {}
+    const { LOCUS_URL, LOCUS_SPACE, LOCUS_API_KEY } = config;
+    if (!LOCUS_URL || !LOCUS_SPACE) { res.writeHead(503); res.end('Locus not configured'); return; }
+
+    const locusMode = mode === 'regex' ? 'regex' : 'semantic';
+    const locusQuery = `${LOCUS_URL}/collections/${LOCUS_SPACE}/search?q=${encodeURIComponent(q)}&k=200&mode=${locusMode}`;
+    const locusHeaders = LOCUS_API_KEY ? { Authorization: `Bearer ${LOCUS_API_KEY}` } : {};
+
+    try {
+      const locusRes = await fetch(locusQuery, { headers: locusHeaders });
+      if (!locusRes.ok) { res.writeHead(locusRes.status); res.end('Locus error'); return; }
+      const data = await locusRes.json();
+
+      const projectBest = {};
+      const projectFiles = {}; // projectName → Map<filePath, excerpt[]>
+
+      for (const r of data.results) {
+        const src = r.metadata?.source;
+        if (!src) continue;
+        const slash = src.indexOf('/');
+        const projectName = slash >= 0 ? src.slice(0, slash) : src;
+        const filePath = slash >= 0 ? src.slice(slash + 1) : src;
+
+        if (!projectBest[projectName] || r.score > projectBest[projectName]) projectBest[projectName] = r.score;
+
+        if (!projectFiles[projectName]) projectFiles[projectName] = new Map();
+        const fileMap = projectFiles[projectName];
+        if (!fileMap.has(filePath)) fileMap.set(filePath, []);
+        const excerpts = fileMap.get(filePath);
+        if (excerpts.length < 3) {
+          let excerpt;
+          if (locusMode === 'regex') {
+            let re; try { re = new RegExp(q, 'i'); } catch {}
+            const m = re && re.exec(r.text);
+            if (m) {
+              const s = Math.max(0, m.index - 80);
+              const e = Math.min(r.text.length, m.index + m[0].length + 80);
+              excerpt = (s > 0 ? '…' : '') + r.text.slice(s, e) + (e < r.text.length ? '…' : '');
+            } else {
+              excerpt = r.text.trim().slice(0, 160);
+            }
+          } else {
+            excerpt = r.text.trim().slice(0, 160);
+          }
+          excerpts.push(excerpt);
+        }
+      }
+
+      const ranked = Object.entries(projectBest)
+        .sort((a, b) => b[1] - a[1])
+        .map(([name]) => ({
+          name,
+          files: Array.from(projectFiles[name].entries())
+            .slice(0, 10)
+            .map(([file, excerpts]) => ({ file, excerpts }))
+        }));
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ results: ranked }));
+    } catch {
+      res.writeHead(503); res.end('Locus unavailable');
+    }
     return;
   }
 

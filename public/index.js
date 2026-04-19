@@ -1,6 +1,10 @@
 let projects = [];
 let renderGen = 0;
 let activeTech = '';
+let searchMode = 'natural';
+let locusResults = null;
+let locusAvailable = true;
+let searchAbort = null;
 
 const listEl = document.getElementById('list');
 const searchEl = document.getElementById('search');
@@ -53,6 +57,7 @@ async function loadConfig() {
       const config = await res.json();
       if (document.getElementById('devDir')) document.getElementById('devDir').value = config.DEV_DIR || '';
       document.getElementById('locusUrl').value = config.LOCUS_URL || '';
+      document.getElementById('locusApiKey').value = config.LOCUS_API_KEY || '';
       document.getElementById('locusSpace').value = config.LOCUS_SPACE || '';
     }
   } catch (err) {
@@ -75,15 +80,80 @@ function relativeTime(ms) {
   return Math.floor(diff / month) + 'mo ago';
 }
 
+function sanitizeName(name) {
+  return name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '-').slice(0, 64);
+}
+
 function getFiltered() {
-  const q = searchEl.value.toLowerCase();
-  return projects.filter(p => {
-    if (activeTech && p.tech !== activeTech) return false;
-    if (!q) return true;
-    return p.name.toLowerCase().includes(q) ||
-            p.tech.toLowerCase().includes(q) ||
-            (p.description && p.description.toLowerCase().includes(q));
-  });
+  const q = searchEl.value;
+
+  if (q && locusResults !== null) {
+    const rankMap = new Map(locusResults.map((r, i) => [r.name, i]));
+    return projects
+      .filter(p => (!activeTech || p.tech === activeTech) && rankMap.has(sanitizeName(p.name)))
+      .sort((a, b) => rankMap.get(sanitizeName(a.name)) - rankMap.get(sanitizeName(b.name)));
+  }
+
+  if (searchMode === 'regex' && q) {
+    let re;
+    try {
+      re = new RegExp(q, 'i');
+      searchEl.classList.remove('regex-error');
+    } catch {
+      searchEl.classList.add('regex-error');
+      return [];
+    }
+    return projects.filter(p =>
+      (!activeTech || p.tech === activeTech) &&
+      (re.test(p.name) || re.test(p.tech) || (p.description && re.test(p.description)))
+    );
+  }
+
+  const lq = q.toLowerCase();
+  return projects.filter(p =>
+    (!activeTech || p.tech === activeTech) &&
+    (!lq || p.name.toLowerCase().includes(lq) ||
+      p.tech.toLowerCase().includes(lq) ||
+      (p.description && p.description.toLowerCase().includes(lq)))
+  );
+}
+
+async function triggerSearch() {
+  const q = searchEl.value;
+  searchEl.classList.remove('regex-error');
+  if (searchAbort) searchAbort.abort();
+  locusResults = null;
+
+  if (!q) { renderProjects(); return; }
+
+  searchAbort = new AbortController();
+  try {
+    const res = await fetch(`/search?q=${encodeURIComponent(q)}&mode=${searchMode}`, { signal: searchAbort.signal });
+    if (res.ok) {
+      const raw = (await res.json()).results || [];
+      // normalize: server may return strings (old format) or { name, snippets } objects
+      locusResults = raw.length
+        ? raw.map(r => typeof r === 'string' ? { name: r, files: [] } : r)
+        : null; // null → fall through to text/regex fallback
+      locusAvailable = true;
+    } else if (res.status === 400) {
+      searchEl.classList.add('regex-error');
+      locusResults = null;
+    } else {
+      locusAvailable = false;
+    }
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    locusAvailable = false;
+  }
+
+  updateLocusIndicator();
+  renderProjects();
+}
+
+function updateLocusIndicator() {
+  const el = document.getElementById('locusStatus');
+  if (el) el.style.display = (!locusAvailable && searchMode === 'natural') ? 'inline' : 'none';
 }
 
 function renderPills() {
@@ -122,22 +192,28 @@ function renderProjects() {
   function rowHTML(p, index) {
     const rawPath = p.path.replace('file://', '').replace(/'/g, "\\'");
     const escapedPath = p.path.replace(/'/g, "\\'");
+    const escapedName = p.name.replace(/'/g, "\\'");
     const name = sanitize(p.name);
     const desc = p.description ? marked.parseInline(sanitize(p.description)) : 'No description';
-    
+    const searching = !!searchEl.value;
+
     return `
     <div class="project-row-container">
-      <a class="project-row" href="#" onclick="event.preventDefault(); openDetails(${index})">
-        <span class="icon">${p.icon}</span>
-        <span class="name">${name}</span>
-        <span class="desc">${desc}</span>
-        <span class="time">${relativeTime(p.lastModified)}</span>
-      </a>
-      <div class="row-actions">
-        <button class="action-btn" title="Open in Finder" onclick="openProjectPath(event, '${escapedPath}', 'finder')">📂</button>
-        <button class="action-btn" title="Open in VS Code" onclick="openProjectPath(event, '${escapedPath}', 'vscode')">💻</button>
-        <button class="copy-btn" title="Copy directory path" onclick="copyToClipboard(event, '${rawPath}')">📋</button>
+      <div class="project-row-main">
+        <a class="project-row" href="#" onclick="event.preventDefault(); openDetails(${index})">
+          <span class="icon">${p.icon}</span>
+          <span class="name">${name}</span>
+          <span class="desc">${desc}</span>
+          <span class="time">${relativeTime(p.lastModified)}</span>
+        </a>
+        <div class="row-actions">
+          <button class="action-btn" title="Open in Finder" onclick="openProjectPath(event, '${escapedPath}', 'finder')">📂</button>
+          <button class="action-btn" title="Open in VS Code" onclick="openProjectPath(event, '${escapedPath}', 'vscode')">💻</button>
+          <button class="copy-btn" title="Copy directory path" onclick="copyToClipboard(event, '${rawPath}')">📋</button>
+          ${searching ? `<button class="expand-btn" title="Show file matches" onclick="toggleFileMatches(event, '${escapedName}', '${escapedPath}', ${index})">▶</button>` : ''}
+        </div>
       </div>
+      <div class="match-list" id="matches-${index}" style="display:none"></div>
     </div>`;
   }
 
@@ -162,7 +238,18 @@ function setupEventListeners() {
   let debounce;
   searchEl.addEventListener('input', () => {
     clearTimeout(debounce);
-    debounce = setTimeout(renderProjects, 150);
+    debounce = setTimeout(triggerSearch, 300);
+  });
+
+  document.getElementById('searchModeBtn').addEventListener('click', () => {
+    searchMode = searchMode === 'natural' ? 'regex' : 'natural';
+    document.getElementById('searchModeBtn').classList.toggle('active', searchMode === 'regex');
+    searchEl.placeholder = searchMode === 'regex' ? 'Regex search...' : 'Search projects...';
+    searchEl.classList.remove('regex-error');
+    locusResults = null;
+    locusAvailable = true;
+    updateLocusIndicator();
+    triggerSearch();
   });
 
   pillsEl.addEventListener('click', e => {
@@ -172,6 +259,14 @@ function setupEventListeners() {
     pill.classList.add('active');
     activeTech = pill.dataset.tech;
     renderProjects();
+  });
+
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      searchEl.focus();
+      searchEl.select();
+    }
   });
 
   let scrollTimer;
@@ -216,6 +311,7 @@ function setupEventListeners() {
     const payload = {
       DEV_DIR: document.getElementById('devDir').value,
       LOCUS_URL: document.getElementById('locusUrl').value,
+      LOCUS_API_KEY: document.getElementById('locusApiKey').value,
       LOCUS_SPACE: document.getElementById('locusSpace').value
     };
 
@@ -316,6 +412,69 @@ window.copyToClipboard = async function(event, text) {
     console.error('Failed to copy: ', err);
   }
 }
+
+function highlight(raw, pattern) {
+  let re;
+  try { re = new RegExp(pattern, 'gi'); } catch { return sanitize(raw); }
+  const out = [];
+  let last = 0, m;
+  while ((m = re.exec(raw)) !== null) {
+    out.push(sanitize(raw.slice(last, m.index)));
+    out.push(`<mark>${sanitize(m[0])}</mark>`);
+    last = m.index + m[0].length;
+    if (m[0].length === 0) re.lastIndex++;
+  }
+  out.push(sanitize(raw.slice(last)));
+  return out.join('');
+}
+
+function renderFileGroups(files, pattern) {
+  return files.map(({ file, excerpts }) => {
+    const rows = excerpts.map(excerpt =>
+      `<div class="match-line"><span class="match-line-text">${highlight(excerpt, pattern)}</span></div>`
+    ).join('');
+    return `<div class="match-file-group">
+      <div class="match-file-header">${sanitize(file)}</div>
+      ${rows}
+    </div>`;
+  }).join('');
+}
+
+window.toggleFileMatches = function(event, projectName, projectPath, index) {
+  event.stopPropagation();
+  const matchList = document.getElementById(`matches-${index}`);
+  const btn = event.currentTarget;
+
+  if (matchList.style.display !== 'none') {
+    matchList.style.display = 'none';
+    btn.textContent = '▶';
+    return;
+  }
+
+  matchList.style.display = 'block';
+  btn.textContent = '▼';
+
+  if (matchList.dataset.loaded) return;
+  matchList.dataset.loaded = '1';
+
+  const entry = locusResults && locusResults.find(r => r.name === sanitizeName(projectName));
+  const proj = projects.find(p => p.name === projectName);
+
+  const metaFields = proj ? [
+    `name: ${proj.name}`,
+    proj.tech && `tech: ${proj.tech}`,
+    proj.description && `description: ${proj.description.slice(0, 100)}`,
+  ].filter(Boolean).join('  ·  ') : '';
+  const metaHTML = metaFields
+    ? `<div class="match-meta"><span class="match-meta-label">metadata</span><span class="match-meta-text">{ ${sanitize(metaFields)} }</span></div>`
+    : '';
+
+  const files = entry ? entry.files : [];
+  const filesHTML = files.length ? renderFileGroups(files, searchEl.value) : '';
+  const inner = metaHTML + filesHTML;
+
+  matchList.innerHTML = inner || '<div class="match-empty">No details available.</div>';
+};
 
 init();
 
