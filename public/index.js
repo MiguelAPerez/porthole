@@ -1,7 +1,7 @@
 let projects = [];
 let renderGen = 0;
 let activeTech = '';
-let searchMode = 'natural';
+let searchMode = 'regex';
 let locusResults = null;
 let locusAvailable = true;
 let searchAbort = null;
@@ -243,8 +243,10 @@ function setupEventListeners() {
 
   document.getElementById('searchModeBtn').addEventListener('click', () => {
     searchMode = searchMode === 'natural' ? 'regex' : 'natural';
-    document.getElementById('searchModeBtn').classList.toggle('active', searchMode === 'regex');
-    searchEl.placeholder = searchMode === 'regex' ? 'Regex search...' : 'Search projects...';
+    const modeBtn = document.getElementById('searchModeBtn');
+    modeBtn.classList.toggle('active', searchMode === 'regex');
+    modeBtn.title = searchMode === 'regex' ? 'Switch to language search' : 'Switch to regex search';
+    searchEl.placeholder = searchMode === 'regex' ? 'Regex search... (⌘K)' : 'Search projects... (⌘K)';
     searchEl.classList.remove('regex-error');
     locusResults = null;
     locusAvailable = true;
@@ -264,8 +266,12 @@ function setupEventListeners() {
   document.addEventListener('keydown', e => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
-      searchEl.focus();
-      searchEl.select();
+      if (document.activeElement === searchEl) {
+        document.getElementById('searchModeBtn').click();
+      } else {
+        searchEl.focus();
+        searchEl.select();
+      }
     }
   });
 
