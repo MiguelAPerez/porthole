@@ -25,6 +25,9 @@ function isPortInUse(port) {
     });
   });
 }
+const REFRESH_COOLDOWN_MS = 5 * 60 * 1000; // minimum 5 min between refreshes
+let lastRefresh = 0;
+
 const DIR = __dirname;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const CONFIG_PATH = path.join(__dirname, 'config.json');
@@ -120,6 +123,13 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.url === '/refresh') {
+    const now = Date.now();
+    if (now - lastRefresh < REFRESH_COOLDOWN_MS) {
+      res.writeHead(200);
+      res.end('ok');
+      return;
+    }
+    lastRefresh = now;
     try {
       execSync(`node ${path.join(DIR, 'generate-projects.js')}`, { cwd: DIR, stdio: 'inherit' });
       res.writeHead(200);
