@@ -207,15 +207,27 @@
       padding: 0.25rem 0.75rem 0.25rem 2.5rem;
       border-bottom: 1px solid rgba(255,255,255,0.04);
     }
-    .match-line { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.78rem; }
+    .match-excerpt { border-bottom: 1px solid rgba(255,255,255,0.04); padding: 0.2rem 0; }
+    .match-line { display: flex; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.78rem; }
+    .match-line-num {
+      flex-shrink: 0;
+      width: 2.5rem;
+      padding: 0.1rem 0.5rem 0.1rem 2.5rem;
+      color: rgba(255,255,255,0.2);
+      text-align: right;
+      user-select: none;
+    }
     .match-line-text {
-      display: block;
-      padding: 0.15rem 0.75rem 0.15rem 3rem;
+      flex: 1;
+      padding: 0.1rem 0.75rem 0.1rem 0.75rem;
       color: var(--muted);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    .match-line-target { background: rgba(88,166,255,0.06); }
+    .match-line-target .match-line-num { color: rgba(255,255,255,0.4); }
+    .match-line-target .match-line-text { color: var(--text); }
     .match-line-text mark {
       background: rgba(88, 166, 255, 0.2);
       color: var(--text);

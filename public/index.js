@@ -436,9 +436,15 @@ function highlight(raw, pattern) {
 
 function renderFileGroups(files, pattern) {
   return files.map(({ file, excerpts }) => {
-    const rows = excerpts.map(excerpt =>
-      `<div class="match-line"><span class="match-line-text">${highlight(excerpt, pattern)}</span></div>`
-    ).join('');
+    const rows = excerpts.map(excerpt => {
+      const lines = excerpt.lines.map((line, i) => {
+        const lineNum = excerpt.lineNum + i;
+        const isMatch = i === excerpt.matchLineOffset;
+        const content = isMatch ? highlight(line, pattern) : sanitize(line);
+        return `<div class="match-line${isMatch ? ' match-line-target' : ''}"><span class="match-line-num">${lineNum}</span><span class="match-line-text">${content}</span></div>`;
+      }).join('');
+      return `<div class="match-excerpt">${lines}</div>`;
+    }).join('');
     return `<div class="match-file-group">
       <div class="match-file-header">${sanitize(file)}</div>
       ${rows}

@@ -58,8 +58,19 @@ const server = http.createServer(async (req, res) => {
 
     let config = {};
     try { if (fs.existsSync(CONFIG_PATH)) config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); } catch {}
-    const { LOCUS_URL, LOCUS_SPACE, LOCUS_API_KEY } = config;
+    const { LOCUS_URL, LOCUS_SPACE, LOCUS_API_KEY, DEV_DIR } = config;
     if (!LOCUS_URL || !LOCUS_SPACE) { res.writeHead(503); res.end('Locus not configured'); return; }
+
+    // Build sanitized-space-name → actual project directory map
+    const sanitize = n => n.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '-').slice(0, 64);
+    const dirMap = {};
+    if (DEV_DIR) {
+      try {
+        for (const e of fs.readdirSync(DEV_DIR, { withFileTypes: true })) {
+          if (e.isDirectory()) dirMap[sanitize(e.name)] = path.join(DEV_DIR, e.name);
+        }
+      } catch {}
+    }
 
     const locusMode = mode === 'regex' ? 'regex' : 'semantic';
     const locusQuery = `${LOCUS_URL}/collections/${LOCUS_SPACE}/search?q=${encodeURIComponent(q)}&k=200&mode=${locusMode}`;
@@ -87,21 +98,33 @@ const server = http.createServer(async (req, res) => {
         if (!fileMap.has(filePath)) fileMap.set(filePath, []);
         const excerpts = fileMap.get(filePath);
         if (excerpts.length < 3) {
-          let excerpt;
-          if (locusMode === 'regex') {
-            let re; try { re = new RegExp(q, 'i'); } catch {}
-            const m = re && re.exec(r.text);
-            if (m) {
-              const s = Math.max(0, m.index - 80);
-              const e = Math.min(r.text.length, m.index + m[0].length + 80);
-              excerpt = (s > 0 ? '…' : '') + r.text.slice(s, e) + (e < r.text.length ? '…' : '');
-            } else {
-              excerpt = r.text.trim().slice(0, 160);
-            }
-          } else {
-            excerpt = r.text.trim().slice(0, 160);
+          let pushed = false;
+          const fullPath = dirMap[projectName] && path.join(dirMap[projectName], filePath);
+          if (fullPath) {
+            try {
+              const fileContent = fs.readFileSync(fullPath, 'utf8');
+              const fileLines = fileContent.split('\n');
+              let matchLineIdx = 0;
+              let re; try { re = new RegExp(q, 'i'); } catch {}
+              const m = re && re.exec(fileContent);
+              if (m) {
+                matchLineIdx = fileContent.slice(0, m.index).split('\n').length - 1;
+              } else {
+                // semantic: locate chunk via whitespace-normalized snippet search
+                const snippet = r.text.trim().slice(0, 60).replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&');
+                const snippetRe = new RegExp(snippet.replace(/\s+/g, '\\s+'), 'i');
+                const sm = snippetRe.exec(fileContent);
+                if (sm) matchLineIdx = fileContent.slice(0, sm.index).split('\n').length - 1;
+              }
+              const start = Math.max(0, matchLineIdx - 2);
+              const end = Math.min(fileLines.length, matchLineIdx + 3);
+              excerpts.push({ lineNum: start + 1, lines: fileLines.slice(start, end), matchLineOffset: matchLineIdx - start });
+              pushed = true;
+            } catch {}
           }
-          excerpts.push(excerpt);
+          if (!pushed) {
+            excerpts.push({ lineNum: 1, lines: [r.text.trim().slice(0, 200)], matchLineOffset: 0 });
+          }
         }
       }
 
