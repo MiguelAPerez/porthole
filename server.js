@@ -145,9 +145,10 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (req.url === '/refresh') {
+  if (req.url.startsWith('/refresh')) {
     const now = Date.now();
-    if (now - lastRefresh < REFRESH_COOLDOWN_MS) {
+    const force = new URL(req.url, 'http://localhost').searchParams.get('force') === 'true';
+    if (!force && now - lastRefresh < REFRESH_COOLDOWN_MS) {
       res.writeHead(200);
       res.end('ok');
       return;

@@ -59,6 +59,7 @@ async function loadConfig() {
       document.getElementById('locusUrl').value = config.LOCUS_URL || '';
       document.getElementById('locusApiKey').value = config.LOCUS_API_KEY || '';
       document.getElementById('locusSpace').value = config.LOCUS_SPACE || '';
+      document.getElementById('maxFileKb').value = config.MAX_FILE_KB || 50;
     }
   } catch (err) {
     console.error('Failed to load settings:', err);
@@ -286,9 +287,9 @@ function setupEventListeners() {
     const btn = document.getElementById('refresh');
     btn.textContent = '⏳';
     try {
-      const res = await fetch('/refresh');
-      if (res.ok) { 
-          btn.textContent = '✓'; 
+      const res = await fetch('/refresh?force=true');
+      if (res.ok) {
+          btn.textContent = '✓';
           await loadProjects(); // Dynamically reload
           setTimeout(() => { btn.innerHTML = '&#x21BB;'; }, 2000);
       } else { 
@@ -318,7 +319,8 @@ function setupEventListeners() {
       DEV_DIR: document.getElementById('devDir').value,
       LOCUS_URL: document.getElementById('locusUrl').value,
       LOCUS_API_KEY: document.getElementById('locusApiKey').value,
-      LOCUS_SPACE: document.getElementById('locusSpace').value
+      LOCUS_SPACE: document.getElementById('locusSpace').value,
+      MAX_FILE_KB: parseInt(document.getElementById('maxFileKb').value, 10) || 50
     };
 
     try {
