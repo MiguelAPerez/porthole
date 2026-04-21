@@ -283,24 +283,45 @@ function setupEventListeners() {
     scrollTimer = setTimeout(() => document.body.classList.remove('scrolling'), 150);
   }, { passive: true });
 
-  document.getElementById('refresh').addEventListener('click', async () => {
-    const btn = document.getElementById('refresh');
-    btn.textContent = '⏳';
+  const syncBtn = document.getElementById('syncBtn');
+  const refreshBtn = document.getElementById('refresh');
+
+  async function runRefresh() {
+    refreshBtn.textContent = '⏳';
     try {
       const res = await fetch('/refresh?force=true');
-      if (res.ok) {
-          btn.textContent = '✓';
-          await loadProjects(); // Dynamically reload
-          setTimeout(() => { btn.innerHTML = '&#x21BB;'; }, 2000);
-      } else { 
-          btn.textContent = '✗'; 
-          setTimeout(() => { btn.innerHTML = '&#x21BB;'; }, 2000); 
-      }
-    } catch {
-      btn.textContent = '✗';
-      setTimeout(() => { btn.innerHTML = '&#x21BB;'; }, 2000);
-    }
+      refreshBtn.textContent = res.ok ? '✓' : '✗';
+      if (res.ok) await loadProjects();
+    } catch { refreshBtn.textContent = '✗'; }
+    setTimeout(() => { refreshBtn.innerHTML = '&#x21BB;'; }, 2000);
+  }
+
+  async function runReembed() {
+    if (!confirm('This will wipe all embeddings and re-sync from scratch.\n\nUse this after changing your embedding model. Continue?')) return;
+    refreshBtn.textContent = '⏳';
+    try {
+      const res = await fetch('/reembed');
+      refreshBtn.textContent = res.ok ? '✓' : '✗';
+      if (res.ok) await loadProjects();
+    } catch { refreshBtn.textContent = '✗'; }
+    setTimeout(() => { refreshBtn.innerHTML = '&#x21BB;'; }, 2000);
+  }
+
+  refreshBtn.addEventListener('click', runRefresh);
+
+  document.getElementById('syncDropdown').addEventListener('click', (e) => {
+    e.stopPropagation();
+    syncBtn.classList.toggle('open');
   });
+
+  syncBtn.querySelector('.split-btn__menu').addEventListener('click', (e) => {
+    const action = e.target.dataset.action;
+    syncBtn.classList.remove('open');
+    if (action === 'refresh') runRefresh();
+    else if (action === 'reembed') runReembed();
+  });
+
+  document.addEventListener('click', () => syncBtn.classList.remove('open'));
 
   // Settings Modal logic
   settingsBtn.addEventListener('click', () => {

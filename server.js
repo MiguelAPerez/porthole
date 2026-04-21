@@ -145,6 +145,24 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (req.url === '/reembed') {
+    try {
+      const cfg = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+      const { LOCUS_URL, LOCUS_SPACE, LOCUS_API_KEY } = cfg;
+      if (!LOCUS_URL || !LOCUS_SPACE) { res.writeHead(400); res.end('Locus not configured'); return; }
+      const headers = { 'Content-Type': 'application/json', ...(LOCUS_API_KEY ? { 'X-API-Key': LOCUS_API_KEY } : {}) };
+      const cachePath = path.join(DIR, '.locus-cache.json');
+      if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath);
+      await fetch(`${LOCUS_URL}/spaces/${LOCUS_SPACE}`, { method: 'DELETE', headers });
+      await fetch(`${LOCUS_URL}/spaces`, { method: 'POST', headers, body: JSON.stringify({ name: LOCUS_SPACE }) });
+      execSync(`node ${path.join(DIR, 'generate-projects.js')}`, { cwd: DIR, stdio: 'inherit' });
+      res.writeHead(200); res.end('ok');
+    } catch (e) {
+      res.writeHead(500); res.end(e.message);
+    }
+    return;
+  }
+
   if (req.url.startsWith('/refresh')) {
     const now = Date.now();
     const force = new URL(req.url, 'http://localhost').searchParams.get('force') === 'true';

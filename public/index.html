@@ -76,19 +76,66 @@
 
     .search-row input:focus { border-color: var(--accent); }
 
-    .refresh-btn {
+    .split-btn {
+      position: relative;
+      display: flex;
+      flex-shrink: 0;
+    }
+
+    .split-btn__main, .split-btn__arrow {
       padding: 0.65rem 0.875rem;
-      border-radius: 8px;
       border: 1px solid var(--border);
       background: var(--card-bg);
       color: var(--text);
       font-size: 1rem;
       cursor: pointer;
-      flex-shrink: 0;
       line-height: 1;
     }
 
-    .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .split-btn__main {
+      border-radius: 8px 0 0 8px;
+      border-right: none;
+    }
+
+    .split-btn__arrow {
+      border-radius: 0 8px 8px 0;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+      font-size: 0.65rem;
+    }
+
+    .split-btn__main:hover, .split-btn__arrow:hover { border-color: var(--accent); color: var(--accent); }
+    .split-btn__arrow:hover { border-left-color: var(--border); }
+
+    .split-btn__menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      z-index: 100;
+      min-width: 160px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .split-btn.open .split-btn__menu { display: block; }
+
+    .split-btn__menu button {
+      display: block;
+      width: 100%;
+      padding: 0.6rem 0.875rem;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 0.875rem;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .split-btn__menu button:hover { background: var(--border); color: var(--accent); }
 
     .search-mode-btn {
       padding: 0 0.75rem;
@@ -440,7 +487,14 @@
       <input type="search" id="search" placeholder="Regex search... (⌘K)">
       <button id="searchModeBtn" class="search-mode-btn active" title="Switch to language search">.*</button>
       <span id="locusStatus" class="locus-status" style="display:none" title="Locus unavailable — using text search">⚡</span>
-      <button id="refresh" class="refresh-btn" title="Regenerate projects (requires: node server.js)">&#x21BB;</button>
+      <div class="split-btn" id="syncBtn">
+        <button id="refresh" class="split-btn__main" title="Regenerate projects (requires: node server.js)">&#x21BB;</button>
+        <button class="split-btn__arrow" id="syncDropdown">&#x25BE;</button>
+        <div class="split-btn__menu">
+          <button data-action="refresh">↻ Refresh</button>
+          <button data-action="reembed">★↻ Re-embed all</button>
+        </div>
+      </div>
     </div>
     <div class="pills" id="pills">
       <button class="pill active" data-tech="">All</button>
