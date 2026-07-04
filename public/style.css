@@ -164,3 +164,128 @@ body {
   font-style: italic;
   opacity: 0.9;
 }
+
+/* Per-project editor picker */
+.editor-split {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.editor-split .editor-open-btn {
+  border-radius: 6px 0 0 6px;
+}
+
+.editor-split .editor-pick-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  border-radius: 0 6px 6px 0;
+  width: 16px;
+  height: 32px;
+  padding: 0;
+  font-size: 0.55rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  margin-left: -4px;
+}
+
+.editor-split .editor-pick-btn:hover,
+.editor-split.has-override .editor-pick-btn {
+  color: var(--accent);
+}
+
+.editor-split.has-override .editor-pick-btn {
+  background: rgba(88, 166, 255, 0.08);
+}
+
+.editor-split.open .editor-pick-btn {
+  color: var(--accent);
+  background: rgba(88, 166, 255, 0.12);
+}
+
+.editor-split .editor-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  z-index: 100;
+  min-width: 180px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.editor-split.open .editor-menu {
+  display: block;
+}
+
+.editor-split .editor-menu button {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.875rem;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-align: left;
+}
+
+.editor-split .editor-menu button:hover {
+  background: var(--border);
+  color: var(--accent);
+}
+
+.editor-split .editor-menu button.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.editor-split .editor-menu .editor-menu-reset {
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.editor-split--compact .editor-open-btn {
+  border-radius: 6px 0 0 6px;
+}
+
+.editor-split--compact .editor-pick-btn--compact {
+  width: 18px;
+  height: auto;
+  align-self: stretch;
+  margin-left: -1px;
+  border-left: 1px solid var(--border);
+  border-radius: 0 6px 6px 0;
+}
+
+.editor-split--details {
+  display: inline-flex;
+}
+
+.editor-split--details .editor-pick-btn {
+  height: auto;
+  align-self: stretch;
+  width: 22px;
+  font-size: 0.65rem;
+  border-radius: 0 4px 4px 0;
+  border: none;
+  margin-left: 0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.editor-split--details .editor-pick-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.editor-split--details #openEditor {
+  border-radius: 4px 0 0 4px;
+}

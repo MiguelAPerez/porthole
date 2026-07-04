@@ -10,6 +10,7 @@ function sanitize(str) {
 
 async function init() {
   try {
+    await loadEditorConfig();
     const [projRes, actRes] = await Promise.all([
       fetch('/projects.json'),
       fetch('/activity.json')
@@ -653,11 +654,12 @@ function renderSummary() {
     `;
 
     for (const p of techProjects) {
-      const escapedPath = p.path.replace(/'/g, "\\'");
+      const pathJs = escPathJs(p.path);
+      const pathAttr = escPathAttr(p.path);
       const totalTokens = (p.claudeInputTokens || 0) + (p.claudeOutputTokens || 0);
       
       explorerHtml += `
-          <div class="project-card" style="border-top: 3px solid ${p.color}">
+          <div class="project-card" style="border-top: 3px solid ${p.color}" data-path="${pathAttr}">
             <div class="top-row">
                 <span style="font-size: 1.2rem;">${p.icon}</span>
                 <span class="name" title="${p.name}">${p.name}</span>
@@ -703,8 +705,9 @@ function renderSummary() {
             </div>
 
             <div class="project-actions">
-                <button class="action-btn-small" onclick="openProjectPath(event, '${escapedPath}', 'finder')">📂 Finder</button>
-                <button class="action-btn-small" onclick="openProjectPath(event, '${escapedPath}', 'vscode')">💻 Code</button>
+                <button class="action-btn-small" onclick="openProjectPath(event, '${pathJs}', 'finder')">📂 Finder</button>
+                ${gitRemoteLinkHTML(p.git, { compact: true })}
+                ${editorSplitHTML(p.path, { compact: true })}
                 <a href="index.html?project=${encodeURIComponent(p.name)}" class="action-btn-small" style="text-decoration: none;">🔍 View</a>
             </div>
           </div>
@@ -740,7 +743,7 @@ document.getElementById('refresh').addEventListener('click', async () => {
   const btn = document.getElementById('refresh');
   btn.textContent = '⏳';
   try {
-    const res = await fetch('/refresh');
+    const res = await fetch('/refresh?force=true');
     if (res.ok) {
       btn.textContent = '✓';
       await init();

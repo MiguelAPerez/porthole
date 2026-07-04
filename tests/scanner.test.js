@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const os = require('os');
 const fs = require('fs');
 const path = require('path');
-const { extractDescription } = require('../lib/scanner');
+const { extractDescription, parseGitRemoteUrl, classifyGitHost } = require('../lib/scanner');
 
 test('extractDescription returns package.json description first', () => {
   const pkg = { description: 'My package desc' };
@@ -34,4 +34,56 @@ test('extractDescription prefers pkg over composer', () => {
   const pkg = { description: 'from pkg' };
   const composer = { description: 'from composer' };
   assert.equal(extractDescription(pkg, composer, '/tmp', null), 'from pkg');
+});
+
+test('parseGitRemoteUrl handles GitHub SSH remotes', () => {
+  const result = parseGitRemoteUrl('git@github.com:MiguelAPerez/project-viewer.git');
+  assert.deepEqual(result, {
+    webUrl: 'https://github.com/MiguelAPerez/project-viewer',
+    host: 'GitHub',
+  });
+});
+
+test('parseGitRemoteUrl handles Gitea HTTPS remotes', () => {
+  const result = parseGitRemoteUrl('https://gitea.example.com/mperez/docs-mcp.git');
+  assert.deepEqual(result, {
+    webUrl: 'https://gitea.example.com/mperez/docs-mcp',
+    host: 'Gitea',
+  });
+});
+
+test('parseGitRemoteUrl handles SCP-style self-hosted remotes', () => {
+  const result = parseGitRemoteUrl('git@git.example.com:acme/project-viewer.git');
+  assert.deepEqual(result, {
+    webUrl: 'https://git.example.com/acme/project-viewer',
+    host: 'Git server',
+  });
+});
+
+test('parseGitRemoteUrl applies GIT_HOST_MAP overrides', () => {
+  const hostMap = { 'git.example.com': 'gitea.example.com' };
+  const result = parseGitRemoteUrl('git@git.example.com:acme/project-viewer.git', hostMap);
+  assert.deepEqual(result, {
+    webUrl: 'https://gitea.example.com/acme/project-viewer',
+    host: 'Gitea',
+  });
+});
+
+test('parseGitRemoteUrl handles host:path remotes without user prefix', () => {
+  const result = parseGitRemoteUrl('git.example.com:acme/project-viewer.git');
+  assert.deepEqual(result, {
+    webUrl: 'https://git.example.com/acme/project-viewer',
+    host: 'Git server',
+  });
+});
+
+test('parseGitRemoteUrl returns null for invalid remotes', () => {
+  assert.equal(parseGitRemoteUrl(''), null);
+  assert.equal(parseGitRemoteUrl('not-a-remote'), null);
+});
+
+test('classifyGitHost identifies common hosts', () => {
+  assert.equal(classifyGitHost('github.com'), 'GitHub');
+  assert.equal(classifyGitHost('gitea.example.com'), 'Gitea');
+  assert.equal(classifyGitHost('gitlab.com'), 'GitLab');
 });

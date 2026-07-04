@@ -16,6 +16,18 @@ const saveSettingsBtn = document.getElementById('saveSettings');
 const detailsModal = document.getElementById('detailsModal');
 const closeDetailsBtn = document.getElementById('closeDetails');
 
+function plainListDesc(text) {
+  if (!text) return 'No description';
+  return sanitize(
+    text
+      .replace(/\s+/g, ' ')
+      .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/[#*_`~]/g, '')
+      .trim()
+  );
+}
+
 function sanitize(str) {
   if (!str) return '';
   return str.replace(/[&<>"']/g, m => ({
@@ -60,6 +72,13 @@ async function loadConfig() {
       document.getElementById('locusApiKey').value = config.LOCUS_API_KEY || '';
       document.getElementById('locusSpace').value = config.LOCUS_SPACE || '';
       document.getElementById('maxFileKb').value = config.MAX_FILE_KB || 50;
+      if (document.getElementById('defaultEditor')) {
+        document.getElementById('defaultEditor').value = normalizeEditor(config.DEFAULT_EDITOR);
+      }
+      if (document.getElementById('gitHostMap')) {
+        document.getElementById('gitHostMap').value = formatGitHostMap(config.GIT_HOST_MAP);
+      }
+      setDefaultEditor(config.DEFAULT_EDITOR);
     }
   } catch (err) {
     console.error('Failed to load settings:', err);
@@ -83,6 +102,26 @@ function relativeTime(ms) {
 
 function sanitizeName(name) {
   return name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_-]/g, '-').slice(0, 64);
+}
+
+function formatGitHostMap(map) {
+  if (!map || typeof map !== 'object') return '';
+  return Object.entries(map).map(([from, to]) => `${from}=${to}`).join('\n');
+}
+
+function parseGitHostMap(text) {
+  const map = {};
+  for (const line of String(text || '').split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const sep = trimmed.match(/[=:]/);
+    if (!sep) continue;
+    const idx = sep.index;
+    const from = trimmed.slice(0, idx).trim();
+    const to = trimmed.slice(idx + 1).trim();
+    if (from && to) map[from] = to;
+  }
+  return map;
 }
 
 function getFiltered() {
@@ -191,11 +230,11 @@ function renderProjects() {
   let offset = 0;
 
   function rowHTML(p, index) {
-    const rawPath = p.path.replace('file://', '').replace(/'/g, "\\'");
-    const escapedPath = p.path.replace(/'/g, "\\'");
+    const rawPath = p.path.replace('file://', '');
+    const escapedPathJs = escPathJs(p.path);
     const escapedName = p.name.replace(/'/g, "\\'");
     const name = sanitize(p.name);
-    const desc = p.description ? marked.parseInline(sanitize(p.description)) : 'No description';
+    const desc = plainListDesc(p.description);
     const searching = !!searchEl.value;
 
     return `
@@ -208,10 +247,11 @@ function renderProjects() {
           <span class="time">${relativeTime(p.lastModified)}</span>
         </a>
         <div class="row-actions">
-          <button class="action-btn" title="Open in Finder" onclick="openProjectPath(event, '${escapedPath}', 'finder')">📂</button>
-          <button class="action-btn" title="Open in VS Code" onclick="openProjectPath(event, '${escapedPath}', 'vscode')">💻</button>
-          <button class="copy-btn" title="Copy directory path" onclick="copyToClipboard(event, '${rawPath}')">📋</button>
-          ${searching ? `<button class="expand-btn" title="Show file matches" onclick="toggleFileMatches(event, '${escapedName}', '${escapedPath}', ${index})">▶</button>` : ''}
+          <button class="action-btn" title="Open in Finder" onclick="openProjectPath(event, '${escapedPathJs}', 'finder')">📂</button>
+          ${gitRemoteLinkHTML(p.git)}
+          ${editorSplitHTML(p.path)}
+          <button class="copy-btn" title="Copy directory path" onclick="copyToClipboard(event, '${escPathJs(rawPath)}')">📋</button>
+          ${searching ? `<button class="expand-btn" title="Show file matches" onclick="toggleFileMatches(event, '${escapedName}', '${escapedPathJs}', ${index})">▶</button>` : ''}
         </div>
       </div>
       <div class="match-list" id="matches-${index}" style="display:none"></div>
@@ -341,7 +381,9 @@ function setupEventListeners() {
       LOCUS_URL: document.getElementById('locusUrl').value,
       LOCUS_API_KEY: document.getElementById('locusApiKey').value,
       LOCUS_SPACE: document.getElementById('locusSpace').value,
-      MAX_FILE_KB: parseInt(document.getElementById('maxFileKb').value, 10) || 50
+      MAX_FILE_KB: parseInt(document.getElementById('maxFileKb').value, 10) || 50,
+      DEFAULT_EDITOR: document.getElementById('defaultEditor').value,
+      GIT_HOST_MAP: parseGitHostMap(document.getElementById('gitHostMap').value)
     };
 
     try {
@@ -352,6 +394,8 @@ function setupEventListeners() {
       });
       if (res.ok) {
         settingsModal.classList.remove('active');
+        setDefaultEditor(payload.DEFAULT_EDITOR);
+        await runRefresh();
       } else {
         alert('Failed to save settings.');
       }
@@ -370,7 +414,14 @@ function setupEventListeners() {
   });
 
   document.getElementById('openFinder').addEventListener('click', () => openProject('finder'));
-  document.getElementById('openCode').addEventListener('click', () => openProject('vscode'));
+  document.getElementById('openEditor').addEventListener('click', () => {
+    if (!selectedProject) return;
+    openProjectPath(null, selectedProject.path, getEditorForPath(selectedProject.path).action);
+  });
+  document.getElementById('detailEditorPick').addEventListener('click', (e) => {
+    if (!selectedProject) return;
+    toggleEditorMenu(e, selectedProject.path);
+  });
 }
 
 window.openDetails = function(index) {
@@ -384,6 +435,9 @@ window.openDetails = function(index) {
   document.getElementById('detailTech').textContent = p.tech;
   document.getElementById('detailDesc').innerHTML = p.description ? marked.parseInline(sanitize(p.description)) : 'No description provided.';
   document.getElementById('detailReadme').innerHTML = p.readme ? marked.parse(sanitize(p.readme)) : 'No README.md found.';
+  document.getElementById('detailEditorSplit').dataset.path = normPath(p.path);
+  updateDetailsEditorUI(p.path);
+  document.getElementById('detailGitRemote').innerHTML = gitRemoteButtonHTML(p.git) || '';
   
   detailsModal.classList.add('active');
 }
@@ -398,6 +452,9 @@ window.openDetailsByName = function(name) {
   document.getElementById('detailTech').textContent = p.tech;
   document.getElementById('detailDesc').innerHTML = p.description ? marked.parseInline(sanitize(p.description)) : 'No description provided.';
   document.getElementById('detailReadme').innerHTML = p.readme ? marked.parse(sanitize(p.readme)) : 'No README.md found.';
+  document.getElementById('detailEditorSplit').dataset.path = normPath(p.path);
+  updateDetailsEditorUI(p.path);
+  document.getElementById('detailGitRemote').innerHTML = gitRemoteButtonHTML(p.git) || '';
   
   detailsModal.classList.add('active');
 }

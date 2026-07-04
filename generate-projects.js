@@ -43,7 +43,9 @@ try {
 
 async function main() {
   console.log(`Scanning projects in ${config.DEV_DIR}...`);
-  const { projects, dailyActivity } = scanProjects(config.DEV_DIR);
+  const { projects, dailyActivity } = scanProjects(config.DEV_DIR, {
+    gitHostMap: config.GIT_HOST_MAP || {},
+  });
 
   console.log(`Found ${projects.length} projects.`);
 

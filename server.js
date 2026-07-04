@@ -2,10 +2,46 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync, execSync } = require('child_process');
 const net = require('net');
 
 const PORT = 3131;
+
+const ANTIGRAVITY_CLI_CANDIDATES = [
+  '/Applications/Antigravity IDE.app/Contents/Resources/app/bin/antigravity-ide',
+  '/Applications/Antigravity.app/Contents/Resources/app/bin/antigravity-ide',
+];
+
+function openAntigravity(projectPath) {
+  const cli = ANTIGRAVITY_CLI_CANDIDATES.find(p => fs.existsSync(p));
+  if (cli) {
+    execFileSync(cli, [projectPath]);
+  } else {
+    execFileSync('open', ['-a', 'Antigravity IDE', projectPath]);
+  }
+}
+
+function loadDevDir() {
+  try {
+    if (fs.existsSync(CONFIG_PATH)) {
+      const config = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+      return config.DEV_DIR || null;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+function resolveProjectPath(rawPath) {
+  const resolved = path.resolve(rawPath);
+  const devDir = loadDevDir();
+  if (devDir) {
+    const root = path.resolve(devDir);
+    if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+      throw new Error('Path outside DEV_DIR');
+    }
+  }
+  return resolved;
+}
 
 // Check if port is already in use
 function isPortInUse(port) {
@@ -232,12 +268,18 @@ const server = http.createServer(async (req, res) => {
     req.on('end', () => {
       try {
         const { path: projectPath, action } = JSON.parse(body);
-        const rawPath = projectPath.replace('file://', '');
-        
+        const rawPath = resolveProjectPath(projectPath.replace('file://', ''));
+
         if (action === 'finder') {
-          execSync(`open "${rawPath}"`);
+          execFileSync('open', [rawPath]);
         } else if (action === 'vscode') {
-          execSync(`code "${rawPath}"`);
+          execFileSync('code', [rawPath]);
+        } else if (action === 'cursor') {
+          execFileSync('cursor', [rawPath]);
+        } else if (action === 'antigravity') {
+          openAntigravity(rawPath);
+        } else if (action === 'claude') {
+          execFileSync('open', [`claude://code/new?folder=${encodeURIComponent(rawPath)}`]);
         } else {
           res.writeHead(400);
           res.end('Unsupported action');
@@ -246,6 +288,11 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(200);
         res.end('ok');
       } catch (e) {
+        if (e.message === 'Path outside DEV_DIR') {
+          res.writeHead(403);
+          res.end(e.message);
+          return;
+        }
         res.writeHead(500);
         res.end(e.message);
       }

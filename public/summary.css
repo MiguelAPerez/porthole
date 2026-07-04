@@ -345,6 +345,10 @@
     border-color: var(--accent);
 }
 
+a.action-btn-small.git-remote-link {
+    text-decoration: none;
+}
+
 #loading {
   text-align: center;
   padding: 5rem;

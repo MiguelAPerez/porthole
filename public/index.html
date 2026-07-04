@@ -45,6 +45,14 @@
       width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border);
       background: var(--card-bg); color: var(--text);
     }
+    .form-group select {
+      width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border);
+      background: var(--card-bg); color: var(--text);
+    }
+    .form-group textarea {
+      width: 100%; padding: 0.5rem; border-radius: 4px; border: 1px solid var(--border);
+      background: var(--card-bg); color: var(--text); resize: vertical; font-family: inherit;
+    }
     .modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem; }
     .modal-actions button {
       padding: 0.5rem 1rem; border-radius: 4px; border: none; cursor: pointer;
@@ -179,9 +187,10 @@
     }
 
     .project-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
+      display: grid;
+      grid-template-columns: 1.5rem 9.5rem minmax(0, 1fr) 4.5rem;
+      align-items: center;
+      column-gap: 0.75rem;
       padding: 0.8rem 0.75rem;
       border-radius: 8px;
       text-decoration: none;
@@ -204,6 +213,7 @@
       display: flex;
       align-items: center;
       gap: 0.25rem;
+      min-width: 0;
     }
 
     .row-actions {
@@ -211,6 +221,7 @@
       align-items: center;
       gap: 0.25rem;
       padding-right: 0.5rem;
+      flex-shrink: 0;
     }
 
     .expand-btn {
@@ -316,43 +327,32 @@
       transform: translateY(0) scale(0.95);
     }
 
-    .project-row .icon { font-size: 1.1rem; flex-shrink: 0; width: 1.5rem; text-align: center; }
+    .project-row .icon { font-size: 1.1rem; width: 1.5rem; text-align: center; }
 
     .project-row .name {
       font-weight: 600;
       font-size: 0.95rem;
-      width: 200px;
-      flex-shrink: 0;
-      word-wrap: break-word;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
     }
 
     .project-row .desc {
-      flex: 1;
       color: var(--muted);
       font-size: 0.875rem;
-      min-width: 0;
-      word-wrap: break-word;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
       overflow: hidden;
-      white-space: nowrap;
       text-overflow: ellipsis;
-    }
-
-    .project-row .desc img {
-      max-height: 20px;
-      vertical-align: middle;
+      white-space: nowrap;
+      min-width: 0;
     }
 
     .project-row .time {
       color: var(--muted);
       font-size: 0.8rem;
       white-space: nowrap;
-      flex-shrink: 0;
-      width: 60px;
       text-align: right;
-      padding-top: 0.15rem;
+      min-width: 0;
     }
 
     .copy-btn.success {
@@ -436,7 +436,8 @@
       padding-top: 1rem;
       border-top: 1px solid var(--border);
     }
-    .details-actions button {
+    .details-actions button,
+    .details-actions .btn-git-remote {
       flex: 1;
       padding: 0.75rem;
       border-radius: 8px;
@@ -446,11 +447,21 @@
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
+      text-decoration: none;
     }
     .btn-finder { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); }
     .btn-vscode { background: #2c974b; color: #fff; border: none; }
+    .btn-cursor { background: #1a1a1a; color: #fff; border: none; }
+    .btn-antigravity { background: #ab7df8; color: #fff; border: none; }
+    .btn-claude { background: #c96442; color: #fff; border: none; }
     .btn-finder:hover { background: var(--hover); }
     .btn-vscode:hover { background: #2ea44f; }
+    .btn-cursor:hover { background: #333; }
+    .btn-antigravity:hover { background: #9b6de8; }
+    .btn-claude:hover { background: #b85535; }
+    .btn-git-remote { background: var(--card-bg); color: var(--text); border: 1px solid var(--border); }
+    .btn-git-remote:hover { background: var(--hover); color: var(--accent); }
+    .action-btn.git-remote-link { text-decoration: none; }
     
     .close-details {
       align-self: flex-end;
@@ -470,8 +481,10 @@
 
     @media (max-width: 640px) {
       body { padding: 1rem; }
+      .project-row {
+        grid-template-columns: 1.5rem minmax(0, 1fr) 4.5rem;
+      }
       .project-row .desc { display: none; }
-      .project-row .name { max-width: none; flex: 1; }
     }
   </style>
 </head>
@@ -527,6 +540,20 @@
         <label for="maxFileKb">Max File Size for Locus (KB)</label>
         <input type="number" id="maxFileKb" placeholder="50" min="1">
       </div>
+      <div class="form-group">
+        <label for="defaultEditor">Default IDE</label>
+        <select id="defaultEditor">
+          <option value="cursor">Cursor</option>
+          <option value="antigravity">Antigravity</option>
+          <option value="vscode">VS Code</option>
+          <option value="claude">Claude Code (Desktop)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="gitHostMap">Git remote host map</label>
+        <textarea id="gitHostMap" rows="4" placeholder="git.example.com=gitea.example.com"></textarea>
+        <small style="color: var(--muted); display: block; margin-top: 0.35rem;">One mapping per line (<code>remote-host=web-host</code> or <code>remote-host:web-host</code>). Lines starting with <code>#</code> are ignored. Rescan runs automatically when you save.</small>
+      </div>
       <div class="modal-actions">
         <button id="closeSettings" class="btn-secondary">Cancel</button>
         <button id="saveSettings" class="btn-primary">Save</button>
@@ -550,12 +577,19 @@
       </div>
       <div class="details-actions">
         <button id="openFinder" class="btn-finder">📂 Open in Finder</button>
-        <button id="openCode" class="btn-vscode">💻 Open in VS Code</button>
+        <span id="detailGitRemote"></span>
+        <div class="editor-split editor-split--details" id="detailEditorSplit">
+          <button id="openEditor" class="btn-cursor">◈ Open in Cursor</button>
+          <button type="button" id="detailEditorPick" class="editor-pick-btn" title="Choose editor for this project">▾</button>
+          <div class="editor-menu split-btn__menu" id="detailEditorMenu"></div>
+        </div>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="editor.js"></script>
+  <script src="git-remote.js"></script>
   <script src="index.js"></script>
 </body>
 </html>
