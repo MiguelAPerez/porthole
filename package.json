@@ -15,7 +15,12 @@
     "view": "open http://localhost:3131",
     "setup": "node setup.js",
     "postinstall": "node setup.js --if-missing",
-    "test": "node --test"
+    "test": "node --test",
+    "test:e2e": "playwright test",
+    "test:e2e:screenshot": "UPDATE_README_SCREENSHOT=1 playwright test tests/e2e/home.spec.js --grep \"captures README screenshot\""
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
   },
   "author": "Miguel Perez",
   "license": "MIT"

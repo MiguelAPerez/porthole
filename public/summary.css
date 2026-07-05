@@ -491,6 +491,7 @@ a.action-btn-small.git-remote-link {
   --ag-l4: #39d353;
   --ag-claude: #d29922;
   --ag-antigravity: #ab7df8;
+  --ag-cursor: #58a6ff;
 }
 
 .activity-grid-section {
@@ -510,15 +511,27 @@ a.action-btn-small.git-remote-link {
 
 .ag-month-row {
   display: flex;
-  margin-left: 28px;
   gap: 2px;
 }
 
+.ag-weeks-row {
+  display: flex;
+  gap: 2px;
+}
+
+.ag-week-header {
+  width: 12px;
+  height: 14px;
+  position: relative;
+}
+
 .ag-month-label {
+  position: absolute;
+  left: 0;
+  top: 0;
   font-size: 0.7rem;
   color: var(--muted);
-  min-width: 14px;
-  flex: 1;
+  white-space: nowrap;
 }
 
 .ag-grid-body {
@@ -630,6 +643,7 @@ a.action-btn-small.git-remote-link {
 
 .ag-tip-dot.claude { background: var(--ag-claude); }
 .ag-tip-dot.ag { background: var(--ag-antigravity); }
+.ag-tip-dot.cursor { background: var(--ag-cursor); }
 .ag-tip-dot.commits { background: var(--ag-l3); }
 
 .ag-tip-total {

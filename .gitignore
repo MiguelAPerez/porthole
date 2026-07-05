@@ -1,9 +1,11 @@
 .locus-cache.json
-projects.json
-config.json
+/projects.json
+/config.json
+/activity.json
 node_modules/
+test-results/
+playwright-report/
+playwright/.cache/
 docs/plans/
 docs/specs/
 docs/superpowers/
-
-activity.json

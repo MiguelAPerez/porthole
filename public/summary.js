@@ -424,6 +424,13 @@ function formatNumber(num) {
     return num;
 }
 
+function formatLocalDate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function renderActivityGrid(activity) {
   const container = document.getElementById('activityGridContainer');
   if (!container) return;
@@ -439,31 +446,28 @@ function renderActivityGrid(activity) {
   // Find max total for intensity scaling
   let maxTotal = 1;
   for (const d of Object.values(activity)) {
-    const t = (d.claude || 0) + (d.antigravity || 0) + (d.commits || 0);
+    const t = (d.claude || 0) + (d.antigravity || 0) + (d.cursor || 0) + (d.commits || 0);
     if (t > maxTotal) maxTotal = t;
   }
 
   const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Build month labels spanning across week columns
-  const monthLabels = [];
-  let lastMonth = -1;
-  for (let w = 0; w < WEEKS; w++) {
-    const d = new Date(startDate);
-    d.setDate(d.getDate() + w * 7);
-    if (d.getMonth() !== lastMonth) {
-      monthLabels.push({ col: w + 1, label: d.toLocaleString('default', { month: 'short' }) });
-      lastMonth = d.getMonth();
-    }
-  }
-
   let html = `<div class="ag-grid-wrap">
     <div class="ag-month-row">
-      <div class="ag-day-labels"></div>`;
-  for (const { col, label } of monthLabels) {
-    html += `<span class="ag-month-label" style="grid-column:${col}">${label}</span>`;
+      <div class="ag-day-labels"></div>
+      <div class="ag-weeks-row">`;
+  let lastMonth = -1;
+  for (let w = 0; w < WEEKS; w++) {
+    const weekStart = new Date(startDate);
+    weekStart.setDate(weekStart.getDate() + w * 7);
+    const month = weekStart.getMonth();
+    const label = month !== lastMonth
+      ? weekStart.toLocaleString('default', { month: 'short' })
+      : '';
+    lastMonth = month;
+    html += `<div class="ag-week-header">${label ? `<span class="ag-month-label">${label}</span>` : ''}</div>`;
   }
-  html += `</div><div class="ag-grid-body"><div class="ag-day-labels">`;
+  html += `</div></div><div class="ag-grid-body"><div class="ag-day-labels">`;
   for (let d = 0; d < 7; d++) {
     html += `<span class="ag-day-label">${d % 2 === 1 ? DAYS[d] : ''}</span>`;
   }
@@ -474,12 +478,12 @@ function renderActivityGrid(activity) {
     for (let d = 0; d < 7; d++) {
       const date = new Date(startDate);
       date.setDate(date.getDate() + w * 7 + d);
-      const key = date.toISOString().slice(0, 10);
-      const entry = activity[key] || { claude: 0, antigravity: 0 };
-      const total = (entry.claude || 0) + (entry.antigravity || 0) + (entry.commits || 0);
+      const key = formatLocalDate(date);
+      const entry = activity[key] || { claude: 0, antigravity: 0, cursor: 0 };
+      const total = (entry.claude || 0) + (entry.antigravity || 0) + (entry.cursor || 0) + (entry.commits || 0);
       const level = total === 0 ? 0 : Math.ceil((total / maxTotal) * 4);
       const isFuture = date > today;
-      html += `<div class="ag-cell level-${isFuture ? 'future' : level}" data-date="${key}" data-claude="${entry.claude}" data-ag="${entry.antigravity}" data-commits="${entry.commits || 0}"></div>`;
+      html += `<div class="ag-cell level-${isFuture ? 'future' : level}" data-date="${key}" data-claude="${entry.claude || 0}" data-ag="${entry.antigravity || 0}" data-cursor="${entry.cursor || 0}" data-commits="${entry.commits || 0}"></div>`;
     }
     html += `</div>`;
   }
@@ -494,6 +498,7 @@ function renderActivityGrid(activity) {
     <span class="ag-legend-sep">·</span>
     <div class="ag-cell level-1" style="background:var(--ag-claude)"></div><span class="ag-legend-label">Claude</span>
     <div class="ag-cell level-1" style="background:var(--ag-antigravity)"></div><span class="ag-legend-label">Antigravity</span>
+    <div class="ag-cell level-1" style="background:var(--ag-cursor)"></div><span class="ag-legend-label">Cursor</span>
   </div>`;
 
   html += `</div>`;
@@ -509,16 +514,17 @@ function renderActivityGrid(activity) {
       const date = cell.dataset.date;
       const claude = parseInt(cell.dataset.claude) || 0;
       const ag = parseInt(cell.dataset.ag) || 0;
+      const cursor = parseInt(cell.dataset.cursor) || 0;
       const commits = parseInt(cell.dataset.commits) || 0;
-      const total = claude + ag;
       const d = new Date(date + 'T12:00:00');
       const label = d.toLocaleDateString('default', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-      const hasAny = total > 0 || commits > 0;
+      const hasAny = claude + ag + cursor + commits > 0;
       tip.innerHTML = `
         <div class="ag-tip-date">${label}</div>
         ${!hasAny ? '<div class="ag-tip-empty">No activity</div>' : `
           ${claude > 0 ? `<div class="ag-tip-row"><span class="ag-tip-dot claude"></span> ${claude} Claude session${claude !== 1 ? 's' : ''}</div>` : ''}
           ${ag > 0 ? `<div class="ag-tip-row"><span class="ag-tip-dot ag"></span> ${ag} Antigravity task${ag !== 1 ? 's' : ''}</div>` : ''}
+          ${cursor > 0 ? `<div class="ag-tip-row"><span class="ag-tip-dot cursor"></span> ${cursor} Cursor session${cursor !== 1 ? 's' : ''}</div>` : ''}
           ${commits > 0 ? `<div class="ag-tip-row"><span class="ag-tip-dot commits"></span> ${commits} commit${commits !== 1 ? 's' : ''}</div>` : ''}
         `}
       `;
